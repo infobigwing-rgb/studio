@@ -1,104 +1,27 @@
-/**
- * @fileOverview Firestore Security Rules for Remian Edit Studio.
- *
- * Core Philosophy:
- * This ruleset prioritizes strict authorization based on user ownership and role-based access,
- * while maintaining flexibility in data shapes for rapid prototyping.  It avoids complex
- * `get()` calls by denormalizing access control data directly onto documents.
- *
- * Data Structure:
- * - /users/{userId}: User profiles, accessible only to the user themselves.
- * - /templates/{templateId}: Public templates, write-protected for non-admin users.
- * - /projects/{projectId}: Collaborative projects with access controlled by a 'collaborators' map.
- * - /renders/{renderId}: Render jobs, accessible to project owners or collaborators.
- *
- * Key Security Decisions:
- * - User data is strictly private; no user listing is allowed.
- * - Templates are publicly readable but not writable except by authorized users (not modeled explicitly).
- * - All write operations require explicit authorization checks.
- *
- * Denormalization for Authorization:
- * - The `projects` collection uses a `collaborators` map to store user roles directly within the
- *   project document. This eliminates the need for complex lookups in security rules and makes
- *   access control more efficient.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * @description Enforces user-only access to their own profile data.
-     * @path /users/{userId}
-     * @allow (create) User with ID 'user123' can create their own profile.
-     * @allow (get) User with ID 'user123' can read their own profile.
-     * @allow (update) User with ID 'user123' can update their own profile.
-     * @allow (delete) User with ID 'user123' can delete their own profile.
-     * @deny (create) User with ID 'user456' cannot create a profile for 'user123'.
-     * @principle Enforces document ownership for all operations.
-     */
+    // Users can manage their own data
     match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isOwner(userId) && resource.data.id == request.resource.data.id;
-      allow delete: if isOwner(userId);
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-
-    /**
-     * @description Allows public read access to templates, but restricts write access.
-     * @path /templates/{templateId}
-     * @allow (get) Any user can read template 'template123'.
-     * @allow (list) Any user can list all templates.
-     * @deny (create) Non-admin user cannot create a new template.
-     * @principle Allows public read, restricts writes to authorized users (admins - not modeled here).
-     */
-    match /templates/{templateId} {
-      allow get: if request.auth != null;
-      allow list: if request.auth != null;
-      allow create: if request.auth != null; // TODO: Add admin validation once roles are established.
-      allow update: if request.auth != null; // TODO: Add admin validation once roles are established.
-      allow delete: if false; // TODO: Add admin validation once roles are established.
-    }
-
-    /**
-     * @description Manages access to project documents based on collaborators.
-     * This collection is not currently used but is set up for future project management features.
-     * @path /projects/{projectId}
-     */
+    
+    // Projects - users can access their own projects
     match /projects/{projectId} {
-      function isCollaborator() {
-        return request.auth.uid in resource.data.collaborators;
-      }
-      allow get: if request.auth != null && isCollaborator();
-      allow list: if request.auth != null; // App must filter by collaborator
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update: if request.auth != null && isCollaborator();
-      allow delete: if request.auth != null && isCollaborator();
+      allow read, write: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
     }
-
-    /**
-     * @description Restricts access to render jobs. A user can access renders where their UID matches the userId field.
-     * This rule enables the client to query the 'renders' collection with `where('userId', '==', request.auth.uid)`.
-     * @path /renders/{renderId}
-     */
+    
+    // Renders - users can access their own render jobs
     match /renders/{renderId} {
-      // Allow user to get a specific render job they own.
-      allow get: if request.auth != null && resource.data.userId == request.auth.uid;
-      
-      // Allow user to list render jobs they own, which is what the client query does.
-      allow list: if request.auth != null && request.query.resource.data.userId == request.auth.uid;
-
-      // Allow user to create a render if the new document's userId matches their own.
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      
-      // Allow user to update their own render jobs.
-      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
-
-      // Deleting renders is not permitted by this ruleset.
-      allow delete: if false;
+      allow read, write: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Templates - readable by all authenticated users
+    match /templates/{templateId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Admin only
     }
   }
 }
