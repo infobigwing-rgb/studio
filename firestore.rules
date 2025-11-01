@@ -65,46 +65,38 @@ service cloud.firestore {
 
     /**
      * @description Manages access to project documents based on collaborators.
+     * This collection is not currently used but is set up for future project management features.
      * @path /projects/{projectId}
-     * @allow (create) User with ID 'user123' can create a project.  The creator is implicitly a collaborator.
-     * @allow (get) User with ID 'user456' can read project 'project789' if 'user456' is in the 'collaborators' map.
-     * @allow (update) User with ID 'user456' can update project 'project789' if 'user456' is in the 'collaborators' map.
-     * @allow (delete) User with ID 'user456' can delete project 'project789' if 'user456' is in the 'collaborators' map.
-     * @deny (get) User with ID 'user789' cannot read project 'project789' if 'user789' is NOT in the 'collaborators' map.
-     * @principle Enforces collaborative access via the 'collaborators' map.
      */
     match /projects/{projectId} {
-      function isCollaborator(collaborators) {
-        return request.auth.uid in collaborators;
+      function isCollaborator() {
+        return request.auth.uid in resource.data.collaborators;
       }
-      allow get: if request.auth != null && isCollaborator(resource.data.collaborators);
-      allow list: if request.auth != null; // Listing needs additional filtering in the application to only show relevant projects
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && isCollaborator(resource.data.collaborators) && resource != null;
-      allow delete: if request.auth != null && isCollaborator(resource.data.collaborators) && resource != null;
+      allow get: if request.auth != null && isCollaborator();
+      allow list: if request.auth != null; // App must filter by collaborator
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update: if request.auth != null && isCollaborator();
+      allow delete: if request.auth != null && isCollaborator();
     }
 
     /**
-     * @description Restricts access to render jobs to project owners or collaborators.
+     * @description Restricts access to render jobs. A user can create a render for a template.
+     * They can only read renders they have created.
      * @path /renders/{renderId}
-     * @allow (get) User with ID 'user456' can read render job 'render123' if 'user456' is a collaborator on the associated project.
-     * @deny (create) User without authorization cannot create a render job.
-     * @principle Ensures that only authorized users can manage render jobs.
      */
     match /renders/{renderId} {
-            function getProjectId() {
-        return resource.data.projectId;
+       function isRenderOwner() {
+        return request.auth.uid == resource.data.userId;
+      }
+       function isCreatingOwnRender() {
+        return request.auth.uid == request.resource.data.userId;
       }
 
-      function isProjectCollaborator(projectId) {
-        return get(/databases/$(database)/documents/projects/$(projectId)).data.collaborators[request.auth.uid] != null;
-      }
-
-      allow get: if request.auth != null && isProjectCollaborator(getProjectId());
-      allow list: if false; // Listing all render jobs is not permitted.  Access must be project-specific.
-      allow create: if request.auth != null && isProjectCollaborator(request.resource.data.projectId);
-      allow update: if request.auth != null && isProjectCollaborator(getProjectId()) && resource != null;
-      allow delete: if request.auth != null && isProjectCollaborator(getProjectId()) && resource != null;
+      allow get: if request.auth != null && isRenderOwner();
+      allow list: if request.auth != null; // App must filter by userId
+      allow create: if request.auth != null && isCreatingOwnRender();
+      allow update: if request.auth != null && isRenderOwner();
+      allow delete: if false;
     }
   }
 }
