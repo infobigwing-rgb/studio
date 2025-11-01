@@ -1,14 +1,29 @@
-"use client";
+'use client';
 
-import React, { createContext, useState, useContext, ReactNode, useMemo } from 'react';
-import type { Template, Layer, Property } from '@/lib/types';
-import { TEMPLATES } from '@/lib/mock-data';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  ReactNode,
+  useMemo,
+  useEffect,
+} from 'react';
+import {
+  useCollection,
+  useFirestore,
+  useUser,
+  useMemoFirebase,
+  updateDocumentNonBlocking,
+} from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import type { Template, Layer } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 
 interface ProjectContextType {
   templates: Template[];
   activeTemplate: Template | null;
   setActiveTemplate: (template: Template | null) => void;
-  addTemplate: (template: Template) => void;
+  addTemplate: (template: Omit<Template, 'id'>) => void;
   activeLayer: Layer | null;
   setActiveLayer: (layer: Layer | null) => void;
   updateLayerProperty: (layerId: string, propertyKey: string, value: any) => void;
@@ -17,11 +32,38 @@ interface ProjectContextType {
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider = ({ children }: { children: ReactNode }) => {
-  const [templates, setTemplates] = useState<Template[]>(TEMPLATES);
-  const [activeTemplate, setActiveTemplateState] = useState<Template | null>(TEMPLATES[0] || null);
-  const [activeLayer, setActiveLayer] = useState<Layer | null>(
-    activeTemplate && activeTemplate.layers.length > 0 ? activeTemplate.layers[0] : null
+  const firestore = useFirestore();
+  const { user } = useUser();
+
+  const templatesRef = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'templates') : null),
+    [firestore]
   );
+  const { data: templates = [], isLoading: templatesLoading } = useCollection<Template>(templatesRef);
+
+  const [activeTemplate, setActiveTemplateState] = useState<Template | null>(null);
+  const [activeLayer, setActiveLayer] = useState<Layer | null>(null);
+
+  useEffect(() => {
+    if (!activeTemplate && templates.length > 0) {
+      const firstTemplate = templates[0];
+      setActiveTemplateState(firstTemplate);
+      if (firstTemplate.layers.length > 0) {
+        setActiveLayer(firstTemplate.layers[0]);
+      }
+    } else if (activeTemplate) {
+        const updatedTemplate = templates.find(t => t.id === activeTemplate.id);
+        if (updatedTemplate) {
+            setActiveTemplateState(updatedTemplate);
+
+            if (activeLayer) {
+                const updatedLayer = updatedTemplate.layers.find(l => l.id === activeLayer.id);
+                setActiveLayer(updatedLayer || null);
+            }
+        }
+    }
+  }, [templates, activeTemplate, activeLayer]);
+  
 
   const setActiveTemplate = (template: Template | null) => {
     setActiveTemplateState(template);
@@ -31,65 +73,61 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       setActiveLayer(null);
     }
   };
-  
+
   const addTemplate = (template: Template) => {
-    setTemplates(prevTemplates => [...prevTemplates, template]);
+    if (!templatesRef) return;
+    // This will be replaced by a proper Firestore call
+    console.log('Adding template (placeholder):', template);
   };
 
-  const updateLayerProperty = (layerId: string, propertyKey: string, value: any) => {
-    setTemplates(prevTemplates =>
-      prevTemplates.map(template => ({
-        ...template,
-        layers: template.layers.map(layer => {
-          if (layer.id === layerId) {
-            const newProperties = {
-              ...layer.properties,
-              [propertyKey]: {
-                ...layer.properties[propertyKey],
-                value: value,
-              },
-            };
-            const updatedLayer = { ...layer, properties: newProperties };
-            
-            if (activeLayer?.id === layerId) {
-                setActiveLayer(updatedLayer);
-            }
+  const updateLayerProperty = (
+    layerId: string,
+    propertyKey: string,
+    value: any
+  ) => {
+    if (!activeTemplate || !firestore) return;
 
-            return updatedLayer;
-          }
-          return layer;
-        }),
-      }))
-    );
+    const templateDocRef = doc(firestore, 'templates', activeTemplate.id);
 
-    setActiveTemplateState(prevTemplate => {
-        if (!prevTemplate) return null;
-        const newLayers = prevTemplate.layers.map(layer => {
-             if (layer.id === layerId) {
-                const newProperties = {
-                ...layer.properties,
-                [propertyKey]: {
-                    ...layer.properties[propertyKey],
-                    value: value,
-                },
-                };
-                return { ...layer, properties: newProperties };
-            }
-            return layer;
-        });
-        return {...prevTemplate, layers: newLayers};
-    })
+    const updatedLayers = activeTemplate.layers.map((layer) => {
+      if (layer.id === layerId) {
+        return {
+          ...layer,
+          properties: {
+            ...layer.properties,
+            [propertyKey]: {
+              ...layer.properties[propertyKey],
+              value: value,
+            },
+          },
+        };
+      }
+      return layer;
+    });
+    
+    updateDocumentNonBlocking(templateDocRef, { layers: updatedLayers });
   };
-  
-  const contextValue = useMemo(() => ({
-    templates,
-    activeTemplate,
-    setActiveTemplate,
-    addTemplate,
-    activeLayer,
-    setActiveLayer,
-    updateLayerProperty,
-  }), [templates, activeTemplate, activeLayer]);
+
+  const contextValue = useMemo(
+    () => ({
+      templates,
+      activeTemplate,
+      setActiveTemplate,
+      addTemplate,
+      activeLayer,
+      setActiveLayer,
+      updateLayerProperty,
+    }),
+    [templates, activeTemplate, activeLayer]
+  );
+
+  if (templatesLoading) {
+      return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      )
+  }
 
   return (
     <ProjectContext.Provider value={contextValue}>

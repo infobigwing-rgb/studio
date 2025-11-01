@@ -18,9 +18,12 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, FileUp } from 'lucide-react';
 import type { ProcessTemplateFileOutput } from '@/ai/flows/process-template-flow';
+import { useFirestore } from '@/firebase';
+import { addDoc, collection } from 'firebase/firestore';
 
 export default function TemplateUploader() {
   const { addTemplate } = useProject();
+  const firestore = useFirestore();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -35,11 +38,11 @@ export default function TemplateUploader() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
+    if (!selectedFile || !firestore) {
       toast({
         variant: 'destructive',
-        title: 'No file selected',
-        description: 'Please select a template file to upload.',
+        title: 'Error',
+        description: 'Please select a file and ensure you are connected.',
       });
       return;
     }
@@ -49,10 +52,8 @@ export default function TemplateUploader() {
       // Simulate processing by calling the AI flow
       const result: ProcessTemplateFileOutput = await processTemplate({ fileName: selectedFile.name });
       
-      // The AI returns a complete Template object.
-      // In a real scenario, you'd get the thumbnail URL from your backend
-      // after it has processed and stored the template.
-      addTemplate(result);
+      const templatesCollection = collection(firestore, 'templates');
+      await addDoc(templatesCollection, result);
 
       toast({
         title: 'Template Processed',
@@ -61,11 +62,11 @@ export default function TemplateUploader() {
       setIsOpen(false);
       setSelectedFile(null);
     } catch (error) {
-      console.error('Failed to process template:', error);
+      console.error('Failed to process and upload template:', error);
       toast({
         variant: 'destructive',
         title: 'Processing Error',
-        description: 'Could not process the template file. Please try again.',
+        description: 'Could not process and save the template. Please try again.',
       });
     } finally {
       setIsLoading(false);

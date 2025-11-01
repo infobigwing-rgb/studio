@@ -56,10 +56,10 @@ service cloud.firestore {
      * @principle Allows public read, restricts writes to authorized users (admins - not modeled here).
      */
     match /templates/{templateId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false; // TODO: Add admin validation once roles are established.
-      allow update: if false; // TODO: Add admin validation once roles are established.
+      allow get: if request.auth != null;
+      allow list: if request.auth != null;
+      allow create: if request.auth != null; // TODO: Add admin validation once roles are established.
+      allow update: if request.auth != null; // TODO: Add admin validation once roles are established.
       allow delete: if false; // TODO: Add admin validation once roles are established.
     }
 

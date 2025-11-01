@@ -3,6 +3,7 @@ import { PlaceHolderImages } from './placeholder-images';
 
 const findImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
 
+// This data is now only used for seeding the database if needed, not directly in the app.
 export const TEMPLATES: Template[] = [
   {
     id: 'template1',
@@ -47,7 +48,7 @@ export const TEMPLATES: Template[] = [
     thumbnailUrl: findImage('template2')?.imageUrl || '',
     thumbnailHint: findImage('template2')?.imageHint || '',
     layers: [
-      {
+       {
         id: 'layer2_1',
         name: 'Headline',
         type: 'text',

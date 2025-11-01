@@ -1,13 +1,20 @@
 'use client';
 
-import { useUser, useAuth } from '@/firebase';
-import { Button } from '@/components/ui/button';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { ProjectProvider } from '@/contexts/ProjectContext';
+import Header from '@/components/layout/Header';
+import TemplateLibrary from '@/components/panels/TemplateLibrary';
+import Canvas from '@/components/panels/Canvas';
+import PropertyInspector from '@/components/panels/PropertyInspector';
+import Timeline from '@/components/panels/Timeline';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
-export default function HomePage() {
+export default function EditorPage() {
   const { user, isUserLoading } = useUser();
-  const auth = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -16,29 +23,29 @@ export default function HomePage() {
     }
   }, [user, isUserLoading, router]);
 
-  const handleSignOut = () => {
-    if (auth) {
-      auth.signOut();
-    }
-  };
-
-  if (isUserLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    return null;
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center bg-background text-foreground">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold">Welcome to Remian Edit Studio</h1>
-        <p className="mt-4 text-lg text-muted-foreground">You are signed in as {user.email || 'Anonymous'}</p>
-        <Button onClick={handleSignOut} className="mt-8">
-          Sign Out
-        </Button>
-      </div>
-    </div>
+    <ProjectProvider>
+      <DndProvider backend={HTML5Backend}>
+        <div className="flex h-dvh w-full flex-col bg-background text-foreground">
+          <Header />
+          <main className="flex flex-1 overflow-hidden">
+            <TemplateLibrary />
+            <div className="flex flex-1 flex-col">
+              <Canvas />
+              <Timeline />
+            </div>
+            <PropertyInspector />
+          </main>
+        </div>
+      </DndProvider>
+    </ProjectProvider>
   );
 }
