@@ -44,7 +44,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Set initial active template when templates load
-    if (!activeTemplate && templates.length > 0) {
+    if (!activeTemplate && templates && templates.length > 0) {
       const firstTemplate = templates[0];
       setActiveTemplateState(firstTemplate);
       if (firstTemplate.layers.length > 0) {
@@ -55,7 +55,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // When active template changes, update its state if it gets updated in the collection
-    if (activeTemplate) {
+    if (activeTemplate && templates) {
         const updatedTemplate = templates.find(t => t.id === activeTemplate.id);
         if (updatedTemplate) {
             // Check if the template data is actually different to avoid infinite loops
@@ -113,14 +113,14 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
 
   const contextValue = useMemo(
     () => ({
-      templates,
+      templates: templates || [],
       activeTemplate,
       setActiveTemplate,
       activeLayer,
       setActiveLayer,
       updateLayerProperty,
     }),
-    [templates, activeTemplate, activeLayer, setActiveTemplate, updateLayerProperty]
+    [templates, activeTemplate, activeLayer]
   );
 
   if (templatesLoading) {
