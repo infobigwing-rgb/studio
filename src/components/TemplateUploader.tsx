@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, FileUp } from 'lucide-react';
-import type { ProcessTemplateFileOutput } from '@/ai/flows/process-template-flow';
+import type { ProcessTemplateFileOutput } from '@/lib/types';
 import { useFirestore } from '@/firebase';
 import { addDoc, collection } from 'firebase/firestore';
 

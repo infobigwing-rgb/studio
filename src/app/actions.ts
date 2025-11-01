@@ -7,9 +7,8 @@ import {
 
 import {
   processTemplateFile,
-  ProcessTemplateFileInput,
-  ProcessTemplateFileOutput,
 } from "@/ai/flows/process-template-flow";
+import type { ProcessTemplateFileInput, ProcessTemplateFileOutput } from "@/lib/types";
 
 export async function getAssetRecommendations(
   input: AIAssetRecommendationsInput
