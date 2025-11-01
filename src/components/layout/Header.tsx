@@ -2,8 +2,8 @@
 
 import { Film, Download, Sparkles, User as UserIcon, LogOut, Settings } from 'lucide-react';
 import { useProject } from '@/contexts/ProjectContext';
-import { useFirestore, useUser, useAuth } from '@/firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useUser, useAuth, addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import Link from 'next/link';
 
@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AssetRecommender from '@/components/ai/AssetRecommender';
 import RenderProgress from '../rendering/RenderProgress';
 import { useToast } from '@/hooks/use-toast';
+import { renderWithShotstack } from '@/app/actions';
 
 export default function Header() {
   const { activeTemplate } = useProject();
@@ -38,28 +39,38 @@ export default function Header() {
       return;
     }
 
+    toast({
+      title: 'Submitting to Renderer...',
+      description: 'Your video is being sent to the render engine.',
+    });
+
     try {
+      // 1. Call the Shotstack render flow
+      const shotstackResponse = await renderWithShotstack(activeTemplate);
+
+      // 2. Create the render document in Firestore with the Shotstack ID
       const rendersCollection = collection(firestore, 'renders');
-      await addDoc(rendersCollection, {
+      addDocumentNonBlocking(rendersCollection, {
+        shotstackId: shotstackResponse.renderId,
         templateId: activeTemplate.id,
         templateName: activeTemplate.name,
         userId: user.uid,
-        status: 'queued',
+        status: 'submitted', // Or use shotstackResponse.status
         progress: 0,
         createdAt: serverTimestamp(),
         outputUrl: null,
       });
 
       toast({
-        title: 'Render Queued',
-        description: `"${activeTemplate.name}" has been added to the render queue.`,
+        title: 'Render Submitted!',
+        description: `Your video "${activeTemplate.name}" is in the queue.`,
       });
     } catch (error) {
       console.error('Failed to queue render:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Could not add template to the render queue.',
+        description: 'Could not submit video for rendering. Please try again.',
       });
     }
   };

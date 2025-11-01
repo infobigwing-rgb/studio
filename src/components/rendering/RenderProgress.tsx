@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useCollection, useFirestore, useUser, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, orderBy, getDocs, limit, writeBatch } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, doc } from 'firebase/firestore';
 import {
   Popover,
   PopoverContent,
@@ -11,30 +11,23 @@ import {
 import { Button } from '@/components/ui/button';
 import { Bell, CheckCircle, Clock, Loader2, Video, XCircle, Download } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { startMockRenderService } from '@/lib/mock-render-service';
-import Link from 'next/link';
+import { getRenderStatus } from '@/app/actions';
 
 interface Render {
   id: string;
+  shotstackId: string;
   templateName: string;
-  status: 'queued' | 'processing' | 'completed' | 'failed';
+  status: 'submitted' | 'queued' | 'rendering' | 'done' | 'failed';
   progress: number;
   outputUrl?: string;
+  userId?: string;
+  createdAt?: any;
 }
 
 export default function RenderProgress() {
   const firestore = useFirestore();
   const { user } = useUser();
-
-  // This effect will run the mock render service on the client.
-  // In a real app, this logic would live on a server.
-  useEffect(() => {
-    if (firestore) {
-      const stopService = startMockRenderService(firestore);
-      return () => stopService();
-    }
-  }, [firestore]);
-
+  const [liveRenders, setLiveRenders] = useState<Render[]>([]);
 
   const rendersQuery = useMemoFirebase(
     () =>
@@ -49,27 +42,84 @@ export default function RenderProgress() {
     [firestore, user]
   );
 
-  const { data: renders, isLoading } = useCollection<Render>(rendersQuery);
+  const { data: initialRenders, isLoading } = useCollection<Render>(rendersQuery);
+  
+  useEffect(() => {
+    if (initialRenders) {
+        setLiveRenders(initialRenders);
+    }
+  }, [initialRenders]);
 
   const activeRenders = useMemo(() => {
-    return renders?.filter(r => r.status === 'queued' || r.status === 'processing');
-  }, [renders]);
+    return liveRenders?.filter(r => r.status === 'submitted' || r.status === 'queued' || r.status === 'rendering');
+  }, [liveRenders]);
+
+  useEffect(() => {
+    if (!activeRenders || activeRenders.length === 0 || !firestore) return;
+
+    const interval = setInterval(async () => {
+      let wasUpdated = false;
+      const updatedRenders = await Promise.all(liveRenders.map(async (render) => {
+        if (render.status === 'done' || render.status === 'failed') {
+          return render;
+        }
+
+        try {
+            const shotstackStatus = await getRenderStatus(render.shotstackId);
+            if (shotstackStatus.status !== render.status || shotstackStatus.progress !== render.progress) {
+                const updatedRender: Render = {
+                    ...render,
+                    status: shotstackStatus.status,
+                    progress: shotstackStatus.progress,
+                    outputUrl: shotstackStatus.url || render.outputUrl,
+                };
+                const renderDocRef = doc(firestore, 'renders', render.id);
+                // Non-blocking update to Firestore
+                updateDocumentNonBlocking(renderDocRef, { 
+                    status: updatedRender.status,
+                    progress: updatedRender.progress,
+                    outputUrl: updatedRender.outputUrl,
+                });
+                wasUpdated = true;
+                return updatedRender;
+            }
+        } catch (error) {
+            console.error(`Failed to get status for render ${render.shotstackId}`, error);
+            // Optionally, mark render as failed in Firestore
+        }
+        return render;
+      }));
+
+      if (wasUpdated) {
+        setLiveRenders(updatedRenders);
+      }
+    }, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [activeRenders, firestore, liveRenders]);
+
 
   const hasActiveRenders = activeRenders && activeRenders.length > 0;
 
   const renderIcon = (status: Render['status']) => {
     switch (status) {
+        case 'submitted':
         case 'queued':
             return <Clock className="h-5 w-5 text-yellow-500" />;
-        case 'processing':
+        case 'rendering':
             return <Loader2 className="h-5 w-5 animate-spin text-blue-500" />;
-        case 'completed':
+        case 'done':
             return <CheckCircle className="h-5 w-5 text-green-500" />;
         case 'failed':
             return <XCircle className="h-5 w-5 text-red-500" />;
         default:
             return <Video className="h-5 w-5 text-muted-foreground" />;
     }
+  }
+
+  const getStatusText = (status: Render['status']) => {
+    if (status === 'done') return 'Completed';
+    return status.charAt(0).toUpperCase() + status.slice(1);
   }
 
   return (
@@ -95,27 +145,26 @@ export default function RenderProgress() {
           </div>
           <div className="grid gap-4">
             {isLoading && <p className="text-sm text-muted-foreground">Loading renders...</p>}
-            {!isLoading && (!renders || renders.length === 0) && (
+            {!isLoading && (!liveRenders || liveRenders.length === 0) && (
                  <p className="text-sm text-muted-foreground text-center py-4">No recent renders found.</p>
             )}
-            {renders && renders.map(render => (
+            {liveRenders && liveRenders.map(render => (
                 <div key={render.id} className="grid grid-cols-[24px_1fr_auto] items-center gap-3">
                     {renderIcon(render.status)}
                     <div className='w-full overflow-hidden'>
                         <p className="text-sm font-medium truncate">{render.templateName}</p>
-                        { (render.status === 'queued' || render.status === 'processing') && <Progress value={render.progress} className="h-2 mt-1" /> }
-                        { render.status === 'completed' && <p className="text-xs text-green-500">Completed</p> }
-                        { render.status === 'failed' && <p className="text-xs text-red-500">Failed</p> }
+                        { (render.status === 'queued' || render.status === 'rendering' || render.status === 'submitted') && <Progress value={render.progress} className="h-2 mt-1" /> }
+                        <p className={`text-xs ${render.status === 'done' ? 'text-green-500' : 'text-muted-foreground'}`}>{getStatusText(render.status)}</p>
                     </div>
-                     { render.status === 'completed' && render.outputUrl ? (
+                     { render.status === 'done' && render.outputUrl ? (
                          <Button asChild variant="outline" size="icon" className="h-8 w-8">
                              <a href={render.outputUrl} target="_blank" rel="noopener noreferrer">
                                  <Download className="h-4 w-4" />
                             </a>
                         </Button>
-                     ) : (
-                        <p className="text-sm text-muted-foreground">{render.progress}%</p>
-                     )}
+                     ) : render.status === 'submitted' || render.status === 'queued' || render.status === 'rendering' ? (
+                        <p className="text-sm text-muted-foreground">{render.progress.toFixed(0)}%</p>
+                     ) : null }
                 </div>
             ))}
           </div>
