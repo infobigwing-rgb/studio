@@ -25,11 +25,13 @@ export default function AIChatbot() {
     const { toast } = useToast();
 
     const handleSendMessage = async () => {
-        if (!inputValue.trim() || !activeTemplate) {
+        if (!inputValue.trim()) return;
+        
+        if (!activeTemplate) {
             toast({
                 variant: 'destructive',
-                title: 'Error',
-                description: 'Please enter a command and ensure a template is active.',
+                title: 'No Active Template',
+                description: 'Please select a template before using the AI assistant.',
             });
             return;
         }

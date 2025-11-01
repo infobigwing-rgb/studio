@@ -52,16 +52,20 @@ const editTemplateFlow = ai.defineFlow(
     outputSchema: EditWithAIOutputSchema,
   },
   async (input) => {
+    // Stringify the template for the prompt, as complex objects can be tricky.
+    const jsonStringifiedTemplate = JSON.stringify(input.template, null, 2);
+
     const { output } = await editTemplatePrompt({
         command: input.command,
-        jsonStringifiedTemplate: JSON.stringify(input.template, null, 2)
+        template: input.template, // Pass the object for type-safety, but use the string in the prompt
+        jsonStringifiedTemplate: jsonStringifiedTemplate,
     });
 
-    if (!output) {
+    if (!output?.updatedTemplate) {
         throw new Error("The AI failed to return an updated template.");
     }
 
-    // The output from the LLM is the template itself
+    // The output from the LLM is the complete, modified template object.
     return { updatedTemplate: output.updatedTemplate };
   }
 );
