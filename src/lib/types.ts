@@ -2,12 +2,13 @@ import { z } from 'zod';
 
 export type Property = {
   value: any;
-  type: 'text' | 'number' | 'color' | 'slider' | 'file';
+  type: 'text' | 'number' | 'color' | 'slider' | 'file' | 'select' | 'toggle-group';
   label: string;
   options?: {
     min?: number;
     max?: number;
     step?: number;
+    items?: { value: string; label: string }[];
   };
 };
 

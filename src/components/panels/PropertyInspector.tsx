@@ -6,8 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Layers, Upload } from "lucide-react";
+import { Layers, Upload, AlignCenter, AlignLeft, AlignRight } from "lucide-react";
 import { Button } from "../ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+
 
 export default function PropertyInspector() {
   const { activeTemplate, activeLayer, setActiveLayer, updateLayerProperty } = useProject();
@@ -146,6 +149,41 @@ export default function PropertyInspector() {
                                 onChange={(e) => handleFileChange(e, layer.id, key)}
                              />
                         </div>
+                      )}
+                      {prop.type === 'select' && (
+                        <Select
+                          value={prop.value}
+                          onValueChange={(value) => handlePropertyChange(layer.id, key, value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={`Select ${prop.label}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {prop.options?.items?.map(item => (
+                              <SelectItem key={item.value} value={item.value}>
+                                {item.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      {prop.type === 'toggle-group' && (
+                        <ToggleGroup
+                          type="single"
+                          variant="outline"
+                          value={prop.value}
+                          onValueChange={(value) => {
+                            if (value) handlePropertyChange(layer.id, key, value)
+                          }}
+                        >
+                          {prop.options?.items?.map(item => (
+                             <ToggleGroupItem key={item.value} value={item.value} aria-label={item.label}>
+                               {item.value === 'left' && <AlignLeft className="h-4 w-4" />}
+                               {item.value === 'center' && <AlignCenter className="h-4 w-4" />}
+                               {item.value === 'right' && <AlignRight className="h-4 w-4" />}
+                             </ToggleGroupItem>
+                          ))}
+                        </ToggleGroup>
                       )}
                     </div>
                   ))}
