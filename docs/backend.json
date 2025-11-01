@@ -1,0 +1,273 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Remian Edit Studio application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the user."
+        },
+        "subscription": {
+          "type": "string",
+          "description": "Subscription level of the user (e.g., free, premium)."
+        },
+        "envatoToken": {
+          "type": "string",
+          "description": "Token for Envato API integration."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was created.",
+          "format": "date-time"
+        },
+        "lastLogin": {
+          "type": "string",
+          "description": "Timestamp indicating the user's last login.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "displayName",
+        "createdAt",
+        "lastLogin"
+      ]
+    },
+    "Template": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Template",
+      "type": "object",
+      "description": "Represents a template that can be customized in the Remian Edit Studio.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the template entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the template."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the template (e.g., intro, outro, lower third)."
+        },
+        "softwareCompatibility": {
+          "type": "array",
+          "description": "List of compatible software (e.g., Premiere Pro, After Effects).",
+          "items": {
+            "type": "string"
+          }
+        },
+        "placeholderLayers": {
+          "type": "array",
+          "description": "Definitions of placeholder layers within the template.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "previewUrl": {
+          "type": "string",
+          "description": "URL of the template preview image or video.",
+          "format": "uri"
+        },
+        "projectFile": {
+          "type": "string",
+          "description": "URL or path to the original project file (e.g., .aep, .prproj).",
+          "format": "uri"
+        },
+        "licenseInfo": {
+          "type": "string",
+          "description": "Information about the template's license."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "category",
+        "softwareCompatibility",
+        "placeholderLayers",
+        "previewUrl",
+        "projectFile",
+        "licenseInfo"
+      ]
+    },
+    "Project": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Project",
+      "type": "object",
+      "description": "Represents a user project based on a template.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the project entity."
+        },
+        "templateId": {
+          "type": "string",
+          "description": "Reference to Template. (Relationship: Template 1:N Project)"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Project)"
+        },
+        "timelineData": {
+          "type": "string",
+          "description": "JSON data representing the timeline configuration of the project."
+        },
+        "layers": {
+          "type": "string",
+          "description": "JSON data describing the customized layers in the project."
+        },
+        "collaborators": {
+          "type": "array",
+          "description": "List of user IDs who are collaborators on this project.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "versionHistory": {
+          "type": "array",
+          "description": "Array of project version hashes.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "templateId",
+        "userId",
+        "timelineData",
+        "layers"
+      ]
+    },
+    "Render": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Render",
+      "type": "object",
+      "description": "Represents a rendering job for a project.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the render entity."
+        },
+        "projectId": {
+          "type": "string",
+          "description": "Reference to Project. (Relationship: Project 1:N Render)"
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the rendering job (e.g., queued, processing, completed, failed)."
+        },
+        "progress": {
+          "type": "number",
+          "description": "Progress of the rendering job as a percentage (0-100)."
+        },
+        "outputUrl": {
+          "type": "string",
+          "description": "URL of the rendered output video.",
+          "format": "uri"
+        },
+        "settings": {
+          "type": "string",
+          "description": "JSON data containing the rendering settings."
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "status",
+        "progress",
+        "outputUrl",
+        "settings"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Uses path-based ownership for access control. Includes standard profile information, subscription status, and API tokens.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/templates/{templateId}",
+        "definition": {
+          "entityName": "Template",
+          "schema": {
+            "$ref": "#/backend/entities/Template"
+          },
+          "description": "Stores template metadata. Accessible by all users for reading, but restricted for creation/modification based on admin roles (not modeled here explicitly, existence over content).",
+          "params": [
+            {
+              "name": "templateId",
+              "description": "The unique ID of the template."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/projects/{projectId}",
+        "definition": {
+          "entityName": "Project",
+          "schema": {
+            "$ref": "#/backend/entities/Project"
+          },
+          "description": "Stores project data. Uses a `collaborators` map for managing access and supports real-time collaboration. Includes denormalized 'collaborators' map for authorization independence.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique ID of the project."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/renders/{renderId}",
+        "definition": {
+          "entityName": "Render",
+          "schema": {
+            "$ref": "#/backend/entities/Render"
+          },
+          "description": "Stores render job details.  Accessible only by authorized users (project owner or collaborators).",
+          "params": [
+            {
+              "name": "renderId",
+              "description": "The unique ID of the render job."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability for the Remian Edit Studio application. It leverages path-based ownership for user-specific data and membership maps for collaborative projects. The design avoids using `get()` calls in security rules by denormalizing authorization data.\n\n**Authorization Independence:**\n\n*   The `projects` collection utilizes a membership map (`collaborators`) to manage access. The user's role within a project is stored directly within the project document. This denormalization avoids the need for security rules to fetch role information from other documents.\n\n*   User-owned data (like in the `/users/{uid}/projects/{projectId}`) follows path-based ownership, where the path itself grants access. This eliminates authorization checks based on document content.\n\n**QAPs (Rules are not Filters):**\n\n*   Homogeneous Security Posture: The structure ensures all documents in a collection share the same security requirements. For example, projects are either globally accessible (if ever desired) or user-specific/collaborative. This simplifies security rules and prevents accidental exposure of private data.\n\n*   List Operations: Secure list operations are supported by the explicit structure. Security rules can easily check if the requesting user ID matches the owner (`userId`) in the path or if the user exists in the `collaborators` map within the project document to allow listing projects the user has access to.\n\n**Additional Considerations:**\n\n*   Timestamps (`createdAt`, `lastLogin`) are included in the user document to track account activity. These fields can be used in security rules to enforce account lifecycle policies (e.g., automatically disabling inactive accounts).\n\n*   The `templates` collection is public. Security rules should ensure that only authorized users (e.g., admins) can create or update templates, while all users can read them."
+  }
+}
