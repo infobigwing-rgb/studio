@@ -53,33 +53,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [templates, activeTemplate]);
 
-  useEffect(() => {
-    // When active template changes, update its state if it gets updated in the collection
-    if (activeTemplate && templates) {
-        const updatedTemplate = templates.find(t => t.id === activeTemplate.id);
-        if (updatedTemplate) {
-            // Check if the template data is actually different to avoid infinite loops
-            if (JSON.stringify(updatedTemplate) !== JSON.stringify(activeTemplate)) {
-                setActiveTemplateState(updatedTemplate);
-            }
-
-            // Ensure the activeLayer state is also kept in sync with the updated layers
-            if (activeLayer) {
-                const updatedActiveLayer = updatedTemplate.layers.find(l => l.id === activeLayer.id);
-                // Only update the layer state if it's different, to prevent re-renders
-                if (updatedActiveLayer && (JSON.stringify(updatedActiveLayer) !== JSON.stringify(activeLayer))) {
-                  setActiveLayerState(updatedActiveLayer);
-                } else if (!updatedActiveLayer) {
-                  // If the active layer was deleted, select the first layer
-                  setActiveLayerState(updatedTemplate.layers[0] || null);
-                }
-            } else if (updatedTemplate.layers.length > 0) {
-                setActiveLayerState(updatedTemplate.layers[0]);
-            }
-        }
-    }
-  }, [templates, activeTemplate, activeLayer]);
-
   const setActiveLayer = (layer: Layer | null) => {
     setActiveLayerState(layer);
   };
