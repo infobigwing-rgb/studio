@@ -67,8 +67,11 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
             if (activeLayer) {
                 const updatedActiveLayer = updatedTemplate.layers.find(l => l.id === activeLayer.id);
                 // Only update the layer state if it's different, to prevent re-renders
-                if (JSON.stringify(updatedActiveLayer) !== JSON.stringify(activeLayer)) {
-                  setActiveLayerState(updatedActiveLayer || (updatedTemplate.layers[0] || null));
+                if (updatedActiveLayer && (JSON.stringify(updatedActiveLayer) !== JSON.stringify(activeLayer))) {
+                  setActiveLayerState(updatedActiveLayer);
+                } else if (!updatedActiveLayer) {
+                  // If the active layer was deleted, select the first layer
+                  setActiveLayerState(updatedTemplate.layers[0] || null);
                 }
             } else if (updatedTemplate.layers.length > 0) {
                 setActiveLayerState(updatedTemplate.layers[0]);

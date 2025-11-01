@@ -58,7 +58,7 @@ export default function TimelineLayer({ layer, index }: TimelineLayerProps) {
     },
   });
 
-  const [{ isDragging }, drag, preview] = useDrag({
+  const [{ isDragging }, drag] = useDrag({
     type: 'layer',
     item: () => ({ id: layer.id, index }),
     collect: (monitor) => ({
@@ -67,7 +67,9 @@ export default function TimelineLayer({ layer, index }: TimelineLayerProps) {
   });
 
   const opacity = isDragging ? 0 : 1;
-  drag(drop(ref));
+  const handleRef = useRef<HTMLDivElement>(null);
+  drag(handleRef); // Apply drag to the grip handle
+  drop(ref); // Apply drop to the whole layer element
 
   return (
     <div
@@ -76,14 +78,16 @@ export default function TimelineLayer({ layer, index }: TimelineLayerProps) {
       data-handler-id={handlerId}
       className={cn(
         'group flex w-full cursor-pointer items-center gap-3 rounded-md p-2 text-left text-sm transition-colors',
-        activeLayer?.id === layer.id ? 'bg-primary/10' : 'hover:bg-muted'
+        activeLayer?.id === layer.id ? 'bg-primary/20 ring-1 ring-primary' : 'hover:bg-muted'
       )}
       onClick={() => setActiveLayer(layer)}
     >
       <div
-        ref={preview}
         className="flex flex-1 items-center gap-3"
       >
+        <div ref={handleRef} className="cursor-grab">
+            <GripVertical className="h-5 w-5 text-muted-foreground group-hover:text-foreground" />
+        </div>
         <div className="flex h-6 w-6 items-center justify-center rounded bg-secondary">
           {layer.type === 'text' && <Text className="h-4 w-4 text-muted-foreground" />}
           {layer.type === 'image' && <Layers className="h-4 w-4 text-muted-foreground" />}
@@ -94,7 +98,6 @@ export default function TimelineLayer({ layer, index }: TimelineLayerProps) {
           <div className="h-full w-3/4 rounded-full bg-accent"></div>
         </div>
       </div>
-      <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab group-hover:text-foreground" />
     </div>
   );
 }

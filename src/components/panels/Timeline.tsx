@@ -13,13 +13,17 @@ export default function Timeline() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Timeline
         </h2>
-        <GripVertical className="h-5 w-5 cursor-row-resize text-muted-foreground" />
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-2">
+      <div className="flex-1 overflow-y-auto p-2">
+        <div className="space-y-1">
           {activeTemplate?.layers.map((layer, index) => (
             <TimelineLayer key={layer.id} layer={layer} index={index} />
           ))}
+          {activeTemplate && activeTemplate.layers.length === 0 && (
+            <div className="flex h-full items-center justify-center">
+              <p className="text-sm text-muted-foreground">This template has no layers to display.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
