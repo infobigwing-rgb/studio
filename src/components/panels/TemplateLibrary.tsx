@@ -8,15 +8,18 @@ import type { Template, SearchEnvatoTemplatesOutput } from '@/lib/types';
 import TemplateUploader from '../TemplateUploader';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, Star, ShoppingCart } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { searchEnvato } from '@/app/actions';
+import { Badge } from '../ui/badge';
+
+type EnvatoTemplate = SearchEnvatoTemplatesOutput['templates'][0];
 
 export default function TemplateLibrary() {
   const { templates, activeTemplate, setActiveTemplate } = useProject();
   const [localSearchTerm, setLocalSearchTerm] = useState('');
   const [envatoSearchTerm, setEnvatoSearchTerm] = useState('');
-  const [envatoTemplates, setEnvatoTemplates] = useState<SearchEnvatoTemplatesOutput['templates']>([]);
+  const [envatoTemplates, setEnvatoTemplates] = useState<EnvatoTemplate[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
   const filteredLocalTemplates = (templates || []).filter((template) =>
@@ -41,7 +44,7 @@ export default function TemplateLibrary() {
     };
   }, [envatoSearchTerm]);
   
-  const handleApplyEnvatoTemplate = (envatoTemplate: SearchEnvatoTemplatesOutput['templates'][0]) => {
+  const handleApplyEnvatoTemplate = (envatoTemplate: EnvatoTemplate) => {
     // This is a placeholder. In a real scenario, we'd process this template.
     const newTemplate: Template = {
       id: envatoTemplate.id,
@@ -50,13 +53,32 @@ export default function TemplateLibrary() {
       thumbnailHint: 'professional video',
       layers: [
          {
-            id: `${envatoTemplate.id}-layer1`,
-            name: 'Main Text',
+            id: `${envatoTemplate.id}-title`,
+            name: 'Title',
             type: 'text',
             properties: {
               content: { value: 'Your Title Here', type: 'text', label: 'Content' },
               fontSize: { value: 52, type: 'slider', label: 'Font Size', options: { min: 12, max: 128 } },
               color: { value: '#FFFFFF', type: 'color', label: 'Color' },
+            }
+         },
+         {
+            id: `${envatoTemplate.id}-subtitle`,
+            name: 'Subtitle',
+            type: 'text',
+            properties: {
+              content: { value: 'Your Subtitle Here', type: 'text', label: 'Content' },
+              fontSize: { value: 24, type: 'slider', label: 'Font Size', options: { min: 10, max: 72 } },
+              color: { value: '#E0E0E0', type: 'color', label: 'Color' },
+            },
+         },
+         {
+            id: `${envatoTemplate.id}-bg`,
+            name: 'Background Media',
+            type: 'image',
+            properties: {
+              source: { value: 'https://picsum.photos/seed/bg/1280/720', type: 'text', label: 'Image URL'},
+              opacity: { value: 100, type: 'slider', label: 'Opacity', options: {min: 0, max: 100} },
             }
          }
       ],
@@ -64,8 +86,12 @@ export default function TemplateLibrary() {
     setActiveTemplate(newTemplate);
   }
 
+  const formatPrice = (cents: number) => {
+    return `$${(cents / 100).toFixed(2)}`;
+  }
+
   return (
-    <aside className="flex w-72 shrink-0 flex-col bg-secondary/50">
+    <aside className="flex w-80 shrink-0 flex-col bg-secondary/50">
       <div className="flex h-12 shrink-0 items-center justify-between border-b px-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Templates
@@ -93,7 +119,7 @@ export default function TemplateLibrary() {
               </div>
             </div>
             <ScrollArea className="flex-1">
-              <div className="grid grid-cols-1 gap-4 p-4 pt-0">
+              <div className="grid grid-cols-1 gap-2 p-2 pt-0">
                 {filteredLocalTemplates.map((template: Template) => (
                   <button
                     key={template.id}
@@ -140,7 +166,7 @@ export default function TemplateLibrary() {
               </div>
             </div>
             <ScrollArea className="flex-1">
-              <div className="grid grid-cols-1 gap-4 p-4 pt-0">
+              <div className="grid grid-cols-1 gap-2 p-2 pt-0">
                 {isSearching && (
                     <div className="flex justify-center items-center p-8">
                         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground"/>
@@ -158,7 +184,7 @@ export default function TemplateLibrary() {
                     key={template.id}
                     onClick={() => handleApplyEnvatoTemplate(template)}
                     className={cn(
-                      'group relative block w-full overflow-hidden rounded-lg border-2 text-left transition-all',
+                      'group relative block w-full overflow-hidden rounded-lg border-2 bg-card text-left text-card-foreground transition-all',
                       activeTemplate?.id === template.id
                         ? 'border-primary shadow-lg'
                         : 'border-transparent hover:border-primary/50'
@@ -167,15 +193,28 @@ export default function TemplateLibrary() {
                     <Image
                       src={template.thumbnailUrl}
                       alt={template.name}
-                      width={256}
-                      height={144}
+                      width={300}
+                      height={169}
                       className="w-full object-cover transition-transform group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    <div className="absolute bottom-0 left-0 p-3">
-                      <h3 className="text-sm font-semibold text-white">
-                        {template.name}
-                      </h3>
+                    <div className="p-3">
+                       <h3 className="text-sm font-semibold truncate">{template.name}</h3>
+                       <p className="text-xs text-muted-foreground">by {template.author}</p>
+                       <div className="flex items-center justify-between mt-2">
+                        <Badge variant="secondary" className="text-xs">{formatPrice(template.priceCents)}</Badge>
+                        <div className="flex items-center gap-2">
+                            {template.rating && (
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-500" />
+                                    <span>{template.rating.toFixed(1)}</span>
+                                </div>
+                            )}
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <ShoppingCart className="h-3 w-3" />
+                                <span>{template.numberOfSales}</span>
+                            </div>
+                        </div>
+                       </div>
                     </div>
                   </button>
                 ))}

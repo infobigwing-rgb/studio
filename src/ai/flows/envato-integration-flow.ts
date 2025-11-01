@@ -37,21 +37,47 @@ const searchEnvatoTemplatesFlow = ai.defineFlow(
       throw new Error('Envato API token is not configured.');
     }
 
-    // In a real implementation, you would use 'fetch' here to call the Envato API.
-    // For now, we will return mock data to simulate the API call.
-    // Example API endpoint: `https://api.envato.com/v1/discovery/search/search/item?site=videohive.net&term=${input.query}`
-    
-    console.log(`Simulating Envato API call with query: ${input.query}`);
+    const { query } = input;
+    const site = 'videohive.net';
 
-    // Mock response
-    const mockTemplates = [
-      { id: 'envato-1', name: 'Epic Glitch Intro', thumbnailUrl: 'https://picsum.photos/seed/env1/256/144' },
-      { id: 'envato-2', name: 'Modern Corporate Slides', thumbnailUrl: 'https://picsum.photos/seed/env2/256/144' },
-      { id: 'envato-3', name: 'Fast Typography', thumbnailUrl: 'https://picsum.photos/seed/env3/256/144' },
-    ];
+    const url = `https://api.envato.com/v1/discovery/search/search/item?site=${site}&term=${encodeURIComponent(query || '')}`;
 
-    return {
-      templates: mockTemplates,
-    };
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${envatoToken}`,
+          'User-Agent': 'Remian-Edit-Studio/1.0',
+        }
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`Envato API Error: ${response.status} ${response.statusText}`, errorBody);
+        throw new Error(`Envato API request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Transform the response to match our output schema
+      const templates = data.matches.map((item: any) => ({
+        id: item.id.toString(),
+        name: item.name,
+        author: item.author_username,
+        thumbnailUrl: item.previews?.icon_with_video_preview?.icon_url || 'https://picsum.photos/seed/placeholder/256/144',
+        priceCents: item.price_cents,
+        numberOfSales: item.number_of_sales,
+        rating: item.rating?.rating,
+        url: item.url,
+      }));
+
+      return {
+        templates,
+      };
+
+    } catch (error) {
+      console.error('Failed to fetch from Envato API:', error);
+      // Return empty array on error to prevent crashing the client
+      return { templates: [] };
+    }
   }
 );

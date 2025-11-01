@@ -72,7 +72,12 @@ export const SearchEnvatoTemplatesOutputSchema = z.object({
   templates: z.array(z.object({
     id: z.string(),
     name: z.string(),
+    author: z.string(),
     thumbnailUrl: z.string().url(),
+    priceCents: z.number(),
+    numberOfSales: z.number(),
+    rating: z.number().optional(),
+    url: z.string().url(),
   })).describe('A list of templates from Envato.'),
 });
 export type SearchEnvatoTemplatesOutput = z.infer<typeof SearchEnvatoTemplatesOutputSchema>;
