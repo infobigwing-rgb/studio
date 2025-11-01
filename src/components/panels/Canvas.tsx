@@ -6,15 +6,19 @@ import Image from 'next/image';
 export default function Canvas() {
   const { activeTemplate } = useProject();
 
+  // Sort layers by z-index if it exists, otherwise maintain order.
+  // The timeline drag-and-drop now controls render order.
+  const sortedLayers = activeTemplate?.layers ? [...activeTemplate.layers].reverse() : [];
+
+
   return (
     <div className="relative flex flex-1 items-center justify-center bg-muted/20 p-8">
       <div className="relative aspect-video w-full max-w-4xl overflow-hidden rounded-lg bg-black shadow-2xl">
-        {activeTemplate?.layers.map((layer, index) => {
+        {sortedLayers.map((layer) => {
           if (layer.type === 'image') {
             return (
               <div
                 key={layer.id}
-                style={{ zIndex: index }}
                 className="absolute inset-0"
               >
                 <Image
@@ -32,9 +36,8 @@ export default function Canvas() {
             return (
               <div
                 key={layer.id}
-                className="select-none text-center"
+                className="select-none"
                 style={{
-                  zIndex: index,
                   fontFamily: layer.properties.fontFamily?.value || 'Inter',
                   fontSize: `${layer.properties.fontSize.value}px`,
                   color: layer.properties.color.value,
@@ -47,7 +50,7 @@ export default function Canvas() {
                   top: `${layer.properties.y.value}%`,
                   left: `${layer.properties.x.value}%`,
                   transform: 'translate(-50%, -50%)',
-                  width: '90%' // Add width to make alignment work
+                  width: '90%'
                 }}
               >
                 {layer.properties.content.value}

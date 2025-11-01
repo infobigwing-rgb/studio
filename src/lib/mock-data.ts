@@ -73,6 +73,15 @@ export const TEMPLATES: Template[] = [
           y: { value: 50, type: 'slider', label: 'Position Y (%)', options: { min: 0, max: 100 } },
         },
       },
+      {
+        id: 'layer2_2',
+        name: 'Product Image',
+        type: 'image',
+        properties: {
+          source: { value: findImage('template2')?.imageUrl || '', type: 'file', label: 'Source' },
+          opacity: { value: 100, type: 'slider', label: 'Opacity', options: { min: 0, max: 100 } },
+        },
+      }
     ],
   },
   {

@@ -1,18 +1,6 @@
 import { z } from 'zod';
 
-export type Property = {
-  value: any;
-  type: 'text' | 'number' | 'color' | 'slider' | 'file' | 'select' | 'toggle-group';
-  label: string;
-  options?: {
-    min?: number;
-    max?: number;
-    step?: number;
-    items?: { value: string; label: string }[];
-  };
-};
-
-const PropertySchemaLoose = z.object({
+export const PropertySchemaLoose = z.object({
   value: z.any(),
   type: z.enum(['text', 'number', 'color', 'slider', 'file', 'select', 'toggle-group']),
   label: z.string(),
@@ -23,6 +11,7 @@ const PropertySchemaLoose = z.object({
     items: z.array(z.object({ value: z.string(), label: z.string() })).optional(),
   }).optional(),
 });
+export type Property = z.infer<typeof PropertySchemaLoose>;
 
 
 export const LayerSchema = z.object({

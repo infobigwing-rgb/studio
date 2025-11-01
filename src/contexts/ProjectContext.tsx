@@ -40,7 +40,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const { data: templates = [], isLoading: templatesLoading } = useCollection<Template>(templatesRef);
 
   const [activeTemplate, setActiveTemplateState] = useState<Template | null>(null);
-  const [activeLayer, setActiveLayer] = useState<Layer | null>(null);
+  const [activeLayer, setActiveLayerState] = useState<Layer | null>(null);
 
   useEffect(() => {
     // Set initial active template when templates load
@@ -48,7 +48,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       const firstTemplate = templates[0];
       setActiveTemplateState(firstTemplate);
       if (firstTemplate.layers.length > 0) {
-        setActiveLayer(firstTemplate.layers[0]);
+        setActiveLayerState(firstTemplate.layers[0]);
       }
     }
   }, [templates, activeTemplate]);
@@ -65,13 +65,17 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
 
             if (activeLayer) {
                 const updatedLayer = updatedTemplate.layers.find(l => l.id === activeLayer.id);
-                setActiveLayer(updatedLayer || (updatedTemplate.layers[0] || null));
+                setActiveLayerState(updatedLayer || (updatedTemplate.layers[0] || null));
             } else if (updatedTemplate.layers.length > 0) {
-                setActiveLayer(updatedTemplate.layers[0]);
+                setActiveLayerState(updatedTemplate.layers[0]);
             }
         }
     }
   }, [templates, activeTemplate, activeLayer]);
+
+  const setActiveLayer = (layer: Layer | null) => {
+    setActiveLayerState(layer);
+  };
   
 
   const setActiveTemplate = (template: Template | null) => {
@@ -106,6 +110,12 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         };
       }
       return layer;
+    });
+    
+    // Optimistic UI update
+    setActiveTemplateState({
+      ...activeTemplate,
+      layers: updatedLayers,
     });
     
     updateDocumentNonBlocking(templateDocRef, { layers: updatedLayers });

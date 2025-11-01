@@ -35,7 +35,7 @@ export default function PropertyInspector() {
 
   if (!activeTemplate) {
     return (
-      <aside className="flex w-80 shrink-0 flex-col bg-secondary/50">
+      <aside className="flex w-80 shrink-0 flex-col border-l bg-secondary/50">
         <div className="flex h-12 shrink-0 items-center border-b px-4">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Properties
@@ -49,7 +49,7 @@ export default function PropertyInspector() {
   }
 
   return (
-    <aside className="flex w-80 shrink-0 flex-col bg-secondary/50">
+    <aside className="flex w-80 shrink-0 flex-col border-l bg-secondary/50">
       <div className="flex h-12 shrink-0 items-center border-b px-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Properties
@@ -61,7 +61,7 @@ export default function PropertyInspector() {
             <AccordionItem value={layer.id} key={layer.id} className="border-b-0">
               <AccordionTrigger 
                 className="border-b px-4 py-3 text-sm font-medium hover:no-underline [&[data-state=open]]:bg-muted"
-                onClick={() => setActiveLayer(layer)}
+                onClick={() => setActiveLayer(layer.id === activeLayer?.id ? null : layer)}
               >
                 <div className="flex items-center gap-2">
                     <Layers className="h-4 w-4" />
