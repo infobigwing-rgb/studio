@@ -63,9 +63,13 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
                 setActiveTemplateState(updatedTemplate);
             }
 
+            // Ensure the activeLayer state is also kept in sync with the updated layers
             if (activeLayer) {
-                const updatedLayer = updatedTemplate.layers.find(l => l.id === activeLayer.id);
-                setActiveLayerState(updatedLayer || (updatedTemplate.layers[0] || null));
+                const updatedActiveLayer = updatedTemplate.layers.find(l => l.id === activeLayer.id);
+                // Only update the layer state if it's different, to prevent re-renders
+                if (JSON.stringify(updatedActiveLayer) !== JSON.stringify(activeLayer)) {
+                  setActiveLayerState(updatedActiveLayer || (updatedTemplate.layers[0] || null));
+                }
             } else if (updatedTemplate.layers.length > 0) {
                 setActiveLayerState(updatedTemplate.layers[0]);
             }

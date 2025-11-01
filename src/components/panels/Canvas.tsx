@@ -6,27 +6,32 @@ import Image from 'next/image';
 export default function Canvas() {
   const { activeTemplate } = useProject();
 
-  // Sort layers by z-index if it exists, otherwise maintain order.
-  // The timeline drag-and-drop now controls render order.
-  const sortedLayers = activeTemplate?.layers ? [...activeTemplate.layers].reverse() : [];
-
+  // The timeline order is the source of truth. We don't need to sort here.
+  // The user reorders layers in the timeline, and we render them in that order.
+  // CSS/HTML stacking context means the last element in the DOM is rendered on top.
+  const layersToRender = activeTemplate?.layers || [];
 
   return (
     <div className="relative flex flex-1 items-center justify-center bg-muted/20 p-8">
       <div className="relative aspect-video w-full max-w-4xl overflow-hidden rounded-lg bg-black shadow-2xl">
-        {sortedLayers.map((layer) => {
+        {layersToRender.map((layer) => {
           if (layer.type === 'image') {
             return (
               <div
                 key={layer.id}
-                className="absolute inset-0"
+                className="absolute"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  opacity: (layer.properties.opacity?.value ?? 100) / 100,
+                  // The z-index is implicitly handled by the render order in the array.
+                }}
               >
                 <Image
                   src={layer.properties.source.value}
                   alt={layer.name}
                   fill
                   className="object-cover"
-                  style={{ opacity: (layer.properties.opacity?.value ?? 100) / 100 }}
                   data-ai-hint="city skyline"
                 />
               </div>
@@ -51,6 +56,7 @@ export default function Canvas() {
                   left: `${layer.properties.x.value}%`,
                   transform: 'translate(-50%, -50%)',
                   width: '90%'
+                  // The z-index is implicitly handled by the render order.
                 }}
               >
                 {layer.properties.content.value}
