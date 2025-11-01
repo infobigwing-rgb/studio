@@ -14,7 +14,7 @@ export default function TemplateLibrary() {
   const { templates, activeTemplate, setActiveTemplate } = useProject();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredTemplates = templates.filter((template) =>
+  const filteredTemplates = (templates || []).filter((template) =>
     template.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
