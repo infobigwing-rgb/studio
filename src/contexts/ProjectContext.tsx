@@ -7,12 +7,11 @@ import React, {
   ReactNode,
   useMemo,
   useEffect,
+  useCallback,
 } from 'react';
 import {
   useCollection,
   useFirestore,
-  useUser,
-  useMemoFirebase,
   updateDocumentNonBlocking,
 } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
@@ -26,6 +25,7 @@ interface ProjectContextType {
   activeLayer: Layer | null;
   setActiveLayer: (layer: Layer | null) => void;
   updateLayerProperty: (layerId: string, propertyKey: string, value: any) => void;
+  reorderLayers: (dragIndex: number, hoverIndex: number) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -33,7 +33,7 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
 
-  const templatesRef = useMemoFirebase(
+  const templatesRef = useMemo(
     () => (firestore ? collection(firestore, 'templates') : null),
     [firestore]
   );
@@ -110,6 +110,25 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     
     updateDocumentNonBlocking(templateDocRef, { layers: updatedLayers });
   };
+  
+  const reorderLayers = useCallback((dragIndex: number, hoverIndex: number) => {
+      if (!activeTemplate || !firestore) return;
+
+      const newLayers = [...activeTemplate.layers];
+      const [draggedLayer] = newLayers.splice(dragIndex, 1);
+      newLayers.splice(hoverIndex, 0, draggedLayer);
+      
+      // Optimistically update the UI
+      setActiveTemplateState({
+          ...activeTemplate,
+          layers: newLayers,
+      });
+
+      // Persist the change to Firestore non-blockingly
+      const templateDocRef = doc(firestore, 'templates', activeTemplate.id);
+      updateDocumentNonBlocking(templateDocRef, { layers: newLayers });
+
+  }, [activeTemplate, firestore]);
 
   const contextValue = useMemo(
     () => ({
@@ -119,8 +138,9 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       activeLayer,
       setActiveLayer,
       updateLayerProperty,
+      reorderLayers,
     }),
-    [templates, activeTemplate, activeLayer]
+    [templates, activeTemplate, activeLayer, reorderLayers]
   );
 
   if (templatesLoading) {
