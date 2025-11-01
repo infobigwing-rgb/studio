@@ -63,7 +63,7 @@ const searchEnvatoTemplatesFlow = ai.defineFlow(
         id: item.id.toString(),
         name: item.name,
         author: item.author_username,
-        thumbnailUrl: item.previews?.icon_with_video_preview?.icon_url || 'https://picsum.photos/seed/placeholder/256/144',
+        thumbnailUrl: item.previews?.icon_with_video_preview?.icon_url || 'https://picsum.photos/seed/placeholder/300/169',
         priceCents: item.price_cents,
         numberOfSales: item.number_of_sales,
         rating: item.rating?.rating,
