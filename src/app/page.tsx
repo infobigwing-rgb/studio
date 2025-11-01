@@ -1,26 +1,27 @@
 "use client";
 
-import { ProjectProvider } from "@/contexts/ProjectContext";
-import Header from "@/components/layout/Header";
-import TemplateLibrary from "@/components/panels/TemplateLibrary";
-import Canvas from "@/components/panels/Canvas";
-import Timeline from "@/components/panels/Timeline";
-import PropertyInspector from "@/components/panels/PropertyInspector";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase';
+import { Loader2 } from 'lucide-react';
 
 export default function Home() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading) {
+      if (user) {
+        router.replace('/home');
+      } else {
+        router.replace('/login');
+      }
+    }
+  }, [user, isUserLoading, router]);
+
   return (
-    <ProjectProvider>
-      <div className="flex h-dvh w-full flex-col bg-background font-body text-foreground">
-        <Header />
-        <main className="flex flex-1 overflow-hidden">
-          <TemplateLibrary />
-          <div className="flex flex-1 flex-col overflow-hidden border-l border-r">
-            <Canvas />
-            <Timeline />
-          </div>
-          <PropertyInspector />
-        </main>
-      </div>
-    </ProjectProvider>
+    <div className="flex h-screen items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>
   );
 }
