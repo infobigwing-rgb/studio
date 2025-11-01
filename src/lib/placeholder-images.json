@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "avatar1",
+      "description": "User avatar 1",
+      "imageUrl": "https://images.unsplash.com/photo-1530268729831-4b0b9e170218?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGVyc29uJTIwZmFjZXxlbnwwfHx8fDE3NjE5ODIyNjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person face"
+    },
+    {
+      "id": "avatar2",
+      "description": "User avatar 2",
+      "imageUrl": "https://images.unsplash.com/photo-1579503841516-e0bd7fca5faa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx3b21hbiUyMGZhY2V8ZW58MHx8fHwxNzYyMDA4ODk3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman face"
+    },
+    {
+      "id": "avatar3",
+      "description": "User avatar 3",
+      "imageUrl": "https://images.unsplash.com/photo-1619182597083-17bda72c1d56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtYW4lMjBmYWNlfGVufDB8fHx8MTc2MTkxNjg0N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man face"
+    },
+    {
+      "id": "template1",
+      "description": "Corporate Presentation thumbnail",
+      "imageUrl": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Y29ycG9yYXRlJTIwb2ZmaWNlfGVufDB8fHx8MTc2MjAwNjcxNHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "corporate office"
+    },
+    {
+      "id": "template2",
+      "description": "Social Media Story thumbnail",
+      "imageUrl": "https://images.unsplash.com/photo-1761864293806-51e7500c08e6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MXwxfHNlYXJjaHwxfHxzb2NpYWwlMjBtZWRpYXxlbnwwfHx8fDE3NjE5ODUwNjR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "social media"
+    },
+    {
+      "id": "template3",
+      "description": "Action Trailer thumbnail",
+      "imageUrl": "https://images.unsplash.com/photo-1724273679923-f0646da6910d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhY3Rpb24lMjBleHBsb3Npb258ZW58MHx8fHwxNzYxOTU0NTM3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "action explosion"
+    },
+    {
+      "id": "template4",
+      "description": "Wedding Album thumbnail",
+      "imageUrl": "https://images.unsplash.com/photo-1529634597503-139d3726fed5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx3ZWRkaW5nJTIwcmluZ3N8ZW58MHx8fHwxNzYyMDAwOTA0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wedding rings"
+    },
+    {
+      "id": "canvas_image_1",
+      "description": "Sample image for canvas",
+      "imageUrl": "https://images.unsplash.com/photo-1502228362178-086346ac6862?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxjaXR5JTIwc2t5bGluZXxlbnwwfHx8fDE3NjE5OTU4MTZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "city skyline"
+    }
+  ]
 }
