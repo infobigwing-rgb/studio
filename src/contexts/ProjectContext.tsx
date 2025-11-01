@@ -8,6 +8,7 @@ interface ProjectContextType {
   templates: Template[];
   activeTemplate: Template | null;
   setActiveTemplate: (template: Template | null) => void;
+  addTemplate: (template: Template) => void;
   activeLayer: Layer | null;
   setActiveLayer: (layer: Layer | null) => void;
   updateLayerProperty: (layerId: string, propertyKey: string, value: any) => void;
@@ -29,6 +30,10 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setActiveLayer(null);
     }
+  };
+  
+  const addTemplate = (template: Template) => {
+    setTemplates(prevTemplates => [...prevTemplates, template]);
   };
 
   const updateLayerProperty = (layerId: string, propertyKey: string, value: any) => {
@@ -80,6 +85,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     templates,
     activeTemplate,
     setActiveTemplate,
+    addTemplate,
     activeLayer,
     setActiveLayer,
     updateLayerProperty,

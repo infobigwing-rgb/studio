@@ -2,11 +2,10 @@
 
 import Image from "next/image";
 import { useProject } from "@/contexts/ProjectContext";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Template } from "@/lib/types";
+import TemplateUploader from "../TemplateUploader";
 
 export default function TemplateLibrary() {
   const { templates, activeTemplate, setActiveTemplate } = useProject();
@@ -17,10 +16,7 @@ export default function TemplateLibrary() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Templates
         </h2>
-        <Button variant="ghost" size="sm">
-          <Upload className="mr-2 h-4 w-4" />
-          Import
-        </Button>
+        <TemplateUploader />
       </div>
       <ScrollArea className="flex-1">
         <div className="grid grid-cols-1 gap-4 p-4">
