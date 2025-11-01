@@ -5,7 +5,6 @@ import React, {
   useState,
   useContext,
   ReactNode,
-  useMemo,
   useEffect,
   useCallback,
 } from 'react';
@@ -13,6 +12,7 @@ import {
   useCollection,
   useFirestore,
   updateDocumentNonBlocking,
+  useMemoFirebase,
 } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import type { Template, Layer } from '@/lib/types';
@@ -33,7 +33,7 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
 
-  const templatesRef = useMemo(
+  const templatesRef = useMemoFirebase(
     () => (firestore ? collection(firestore, 'templates') : null),
     [firestore]
   );
@@ -130,8 +130,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
 
   }, [activeTemplate, firestore]);
 
-  const contextValue = useMemo(
-    () => ({
+  const contextValue = {
       templates: templates || [],
       activeTemplate,
       setActiveTemplate,
@@ -139,9 +138,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       setActiveLayer,
       updateLayerProperty,
       reorderLayers,
-    }),
-    [templates, activeTemplate, activeLayer, reorderLayers]
-  );
+    };
 
   if (templatesLoading) {
       return (
