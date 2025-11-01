@@ -8,8 +8,8 @@ import {
 import {
   processTemplateFile,
 } from "@/ai/flows/process-template-flow";
-import type { ProcessTemplateFileInput, ProcessTemplateFileOutput } from "@/lib/types";
-import { searchEnvatoTemplates, SearchEnvatoTemplatesInput } from "@/ai/flows/envato-integration-flow";
+import type { ProcessTemplateFileInput, ProcessTemplateFileOutput, SearchEnvatoTemplatesInput, SearchEnvatoTemplatesOutput } from "@/lib/types";
+import { searchEnvatoTemplates } from "@/ai/flows/envato-integration-flow";
 
 export async function getAssetRecommendations(
   input: AIAssetRecommendationsInput
@@ -23,6 +23,6 @@ export async function processTemplate(
   return await processTemplateFile(input);
 }
 
-export async function searchEnvato(input: SearchEnvatoTemplatesInput) {
+export async function searchEnvato(input: SearchEnvatoTemplatesInput): Promise<SearchEnvatoTemplatesOutput> {
   return await searchEnvatoTemplates(input);
 }

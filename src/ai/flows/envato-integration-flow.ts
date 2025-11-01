@@ -8,31 +8,12 @@
  *
  * @exports {
  *   searchEnvatoTemplates: function
- *   SearchEnvatoTemplatesInput: type
- *   SearchEnvatoTemplatesOutput: type
  * }
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-
-// Define the input schema for searching templates
-export const SearchEnvatoTemplatesInputSchema = z.object({
-  query: z.string().optional().describe('The search query for templates.'),
-  // Add other parameters like category, etc. as needed
-});
-export type SearchEnvatoTemplatesInput = z.infer<typeof SearchEnvatoTemplatesInputSchema>;
-
-
-// Define a basic output schema. This will be expanded later.
-export const SearchEnvatoTemplatesOutputSchema = z.object({
-  templates: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    thumbnailUrl: z.string().url(),
-  })).describe('A list of templates from Envato.'),
-});
-export type SearchEnvatoTemplatesOutput = z.infer<typeof SearchEnvatoTemplatesOutputSchema>;
+import { SearchEnvatoTemplatesInputSchema, SearchEnvatoTemplatesOutputSchema, type SearchEnvatoTemplatesInput, type SearchEnvatoTemplatesOutput } from '@/lib/types';
 
 
 export async function searchEnvatoTemplates(

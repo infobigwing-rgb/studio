@@ -58,3 +58,21 @@ export const ProcessTemplateFileOutputSchema = z.object({
   layers: z.array(LayerSchema),
 });
 export type ProcessTemplateFileOutput = z.infer<typeof ProcessTemplateFileOutputSchema>;
+
+// Define the input schema for searching templates
+export const SearchEnvatoTemplatesInputSchema = z.object({
+  query: z.string().optional().describe('The search query for templates.'),
+  // Add other parameters like category, etc. as needed
+});
+export type SearchEnvatoTemplatesInput = z.infer<typeof SearchEnvatoTemplatesInputSchema>;
+
+
+// Define a basic output schema. This will be expanded later.
+export const SearchEnvatoTemplatesOutputSchema = z.object({
+  templates: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    thumbnailUrl: z.string().url(),
+  })).describe('A list of templates from Envato.'),
+});
+export type SearchEnvatoTemplatesOutput = z.infer<typeof SearchEnvatoTemplatesOutputSchema>;

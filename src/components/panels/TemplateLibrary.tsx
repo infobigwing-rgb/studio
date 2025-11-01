@@ -4,14 +4,14 @@ import Image from 'next/image';
 import { useProject } from '@/contexts/ProjectContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import type { Template } from '@/lib/types';
+import type { Template, SearchEnvatoTemplatesOutput } from '@/lib/types';
 import TemplateUploader from '../TemplateUploader';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { searchEnvato } from '@/app/actions';
-import type { SearchEnvatoTemplatesOutput } from '@/ai/flows/envato-integration-flow';
+
 
 export default function TemplateLibrary() {
   const { templates, activeTemplate, setActiveTemplate } = useProject();
