@@ -78,25 +78,27 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
 
     const updatedLayers = activeTemplate.layers.map((layer) => {
       if (layer.id === layerId) {
-        return {
-          ...layer,
-          properties: {
-            ...layer.properties,
-            [propertyKey]: {
-              ...layer.properties[propertyKey],
-              value: value,
-            },
-          },
-        };
+        // Create a deep copy of the layer to avoid direct state mutation
+        const newLayer = JSON.parse(JSON.stringify(layer));
+        newLayer.properties[propertyKey].value = value;
+        return newLayer;
       }
       return layer;
     });
     
-    // Optimistic UI update
-    setActiveTemplateState({
+    const newActiveTemplate = {
       ...activeTemplate,
       layers: updatedLayers,
-    });
+    };
+    
+    // Optimistic UI update
+    setActiveTemplateState(newActiveTemplate);
+
+    // Also update the activeLayer state if it's the one being changed
+    const newActiveLayer = updatedLayers.find(l => l.id === activeLayer?.id);
+    if (newActiveLayer) {
+        setActiveLayerState(newActiveLayer);
+    }
     
     updateDocumentNonBlocking(templateDocRef, { layers: updatedLayers });
   };

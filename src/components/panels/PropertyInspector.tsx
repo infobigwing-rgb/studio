@@ -13,7 +13,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 
 export default function PropertyInspector() {
-  const { activeTemplate, activeLayer, setActiveLayer, updateLayerProperty } = useProject();
+  const { activeTemplate, activeLayer, updateLayerProperty } = useProject();
 
   const handlePropertyChange = (layerId: string, propKey: string, value: any) => {
     updateLayerProperty(layerId, propKey, value);
