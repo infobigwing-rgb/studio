@@ -1,29 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can manage their own data
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Projects - users can access their own projects
-    match /projects/{projectId} {
-      allow read, write: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
-    }
-    
-    // Renders - users can read their own render jobs and query the collection by their userId.
-    match /renders/{renderId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-      allow list: if request.auth != null &&
-        request.query.resource.data.userId == request.auth.uid;
-    }
-    
-    // Templates - readable by all authenticated users
-    match /templates/{templateId} {
-      allow read: if request.auth != null;
-      allow write: if false; // Admin only
+    // TEMPORARY: Allow all access for authenticated users during development
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
