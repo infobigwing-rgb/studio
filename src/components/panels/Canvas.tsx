@@ -23,7 +23,7 @@ export default function Canvas() {
           />
         )}
         <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
-            {textLayers.map((layer, index) => (
+            {textLayers.map((layer) => (
                 <div
                     key={layer.id}
                     className="select-none text-center"
@@ -34,7 +34,9 @@ export default function Canvas() {
                         fontWeight: 'bold',
                         textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
                         position: 'absolute',
-                        top: `${30 + index * 20}%`,
+                        top: `${layer.properties.y.value}%`,
+                        left: `${layer.properties.x.value}%`,
+                        transform: 'translate(-50%, -50%)',
                     }}
                 >
                     {layer.properties.content.value}

@@ -6,13 +6,28 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Layers } from "lucide-react";
+import { Layers, Upload } from "lucide-react";
+import { Button } from "../ui/button";
 
 export default function PropertyInspector() {
   const { activeTemplate, activeLayer, setActiveLayer, updateLayerProperty } = useProject();
 
   const handlePropertyChange = (layerId: string, propKey: string, value: any) => {
     updateLayerProperty(layerId, propKey, value);
+  };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, layerId: string, propKey: string) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (loadEvent) => {
+        if (loadEvent.target?.result) {
+            // For now, we just use the data URL. Later this would upload to storage.
+            handlePropertyChange(layerId, propKey, loadEvent.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   if (!activeTemplate) {
@@ -51,7 +66,7 @@ export default function PropertyInspector() {
                 </div>
               </AccordionTrigger>
               <AccordionContent className="bg-background/50 p-4">
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {Object.entries(layer.properties).map(([key, prop]) => (
                     <div key={key} className="space-y-2">
                       <Label htmlFor={`${layer.id}-${key}`}>{prop.label}</Label>
@@ -61,6 +76,14 @@ export default function PropertyInspector() {
                           type="text"
                           value={prop.value}
                           onChange={(e) => handlePropertyChange(layer.id, key, e.target.value)}
+                        />
+                      )}
+                      {prop.type === 'number' && (
+                        <Input
+                          id={`${layer.id}-${key}`}
+                          type="number"
+                          value={prop.value}
+                          onChange={(e) => handlePropertyChange(layer.id, key, parseFloat(e.target.value))}
                         />
                       )}
                       {prop.type === 'color' && (
@@ -90,7 +113,38 @@ export default function PropertyInspector() {
                                 value={[prop.value]}
                                 onValueChange={([val]) => handlePropertyChange(layer.id, key, val)}
                             />
-                            <span className="text-xs text-muted-foreground">{prop.value}</span>
+                             <Input
+                              type="number"
+                              className="h-8 w-16"
+                              value={prop.value}
+                              onChange={(e) => handlePropertyChange(layer.id, key, parseFloat(e.target.value))}
+                              min={prop.options?.min ?? 0}
+                              max={prop.options?.max ?? 100}
+                            />
+                        </div>
+                      )}
+                      {prop.type === 'file' && (
+                         <div className="flex items-center gap-2">
+                             <Input
+                                id={`${layer.id}-${key}-display`}
+                                type="text"
+                                readOnly
+                                value={prop.value.length > 30 ? '...' + prop.value.slice(-30) : prop.value}
+                                className="flex-1"
+                            />
+                             <Button asChild variant="outline" size="icon">
+                               <label htmlFor={`${layer.id}-${key}-file`}>
+                                 <Upload className="h-4 w-4" />
+                                 <span className="sr-only">Upload</span>
+                               </label>
+                             </Button>
+                             <Input
+                                id={`${layer.id}-${key}-file`}
+                                type="file"
+                                className="hidden"
+                                accept="image/*,video/*"
+                                onChange={(e) => handleFileChange(e, layer.id, key)}
+                             />
                         </div>
                       )}
                     </div>

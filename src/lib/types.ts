@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export type Property = {
   value: any;
-  type: 'text' | 'number' | 'color' | 'slider';
+  type: 'text' | 'number' | 'color' | 'slider' | 'file';
   label: string;
   options?: {
     min?: number;
@@ -19,7 +19,7 @@ export type Layer = {
 };
 
 export type Template = {
-  id: string;
+  id:string;
   name: string;
   thumbnailUrl: string;
   thumbnailHint: string;

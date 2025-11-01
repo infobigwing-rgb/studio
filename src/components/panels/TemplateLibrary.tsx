@@ -60,6 +60,8 @@ export default function TemplateLibrary() {
               content: { value: 'Your Title Here', type: 'text', label: 'Content' },
               fontSize: { value: 52, type: 'slider', label: 'Font Size', options: { min: 12, max: 128 } },
               color: { value: '#FFFFFF', type: 'color', label: 'Color' },
+              x: { value: 50, type: 'slider', label: 'Position X (%)', options: { min: 0, max: 100 } },
+              y: { value: 40, type: 'slider', label: 'Position Y (%)', options: { min: 0, max: 100 } },
             }
          },
          {
@@ -70,6 +72,8 @@ export default function TemplateLibrary() {
               content: { value: 'Your Subtitle Here', type: 'text', label: 'Content' },
               fontSize: { value: 24, type: 'slider', label: 'Font Size', options: { min: 10, max: 72 } },
               color: { value: '#E0E0E0', type: 'color', label: 'Color' },
+               x: { value: 50, type: 'slider', label: 'Position X (%)', options: { min: 0, max: 100 } },
+               y: { value: 60, type: 'slider', label: 'Position Y (%)', options: { min: 0, max: 100 } },
             },
          },
          {
@@ -77,7 +81,7 @@ export default function TemplateLibrary() {
             name: 'Background Media',
             type: 'image',
             properties: {
-              source: { value: 'https://picsum.photos/seed/bg/1280/720', type: 'text', label: 'Image URL'},
+              source: { value: 'https://picsum.photos/seed/bg/1280/720', type: 'file', label: 'Source'},
               opacity: { value: 100, type: 'slider', label: 'Opacity', options: {min: 0, max: 100} },
             }
          }
