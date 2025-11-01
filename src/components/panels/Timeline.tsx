@@ -1,6 +1,5 @@
 "use client";
 
-import { GripVertical } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import TimelineLayer from './TimelineLayer';
 
