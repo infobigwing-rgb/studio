@@ -12,10 +12,12 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid;
     }
     
-    // Renders - users can access their own render jobs
+    // Renders - users can read their own render jobs and query the collection by their userId.
     match /renders/{renderId} {
       allow read, write: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
+        request.auth.uid == resource.data.userId;
+      allow list: if request.auth != null &&
+        request.query.resource.data.userId == request.auth.uid;
     }
     
     // Templates - readable by all authenticated users
