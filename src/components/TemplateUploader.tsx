@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, ChangeEvent } from 'react';
-import { useProject } from '@/contexts/ProjectContext';
 import { processTemplate } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,11 +17,10 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, FileUp } from 'lucide-react';
 import type { ProcessTemplateFileOutput } from '@/lib/types';
-import { useFirestore } from '@/firebase';
-import { addDoc, collection } from 'firebase/firestore';
+import { useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export default function TemplateUploader() {
-  const { addTemplate } = useProject();
   const firestore = useFirestore();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,7 +51,7 @@ export default function TemplateUploader() {
       const result: ProcessTemplateFileOutput = await processTemplate({ fileName: selectedFile.name });
       
       const templatesCollection = collection(firestore, 'templates');
-      await addDoc(templatesCollection, result);
+      addDocumentNonBlocking(templatesCollection, result);
 
       toast({
         title: 'Template Processed',

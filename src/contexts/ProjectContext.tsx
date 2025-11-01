@@ -23,7 +23,6 @@ interface ProjectContextType {
   templates: Template[];
   activeTemplate: Template | null;
   setActiveTemplate: (template: Template | null) => void;
-  addTemplate: (template: Omit<Template, 'id'>) => void;
   activeLayer: Layer | null;
   setActiveLayer: (layer: Layer | null) => void;
   updateLayerProperty: (layerId: string, propertyKey: string, value: any) => void;
@@ -33,7 +32,6 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const firestore = useFirestore();
-  const { user } = useUser();
 
   const templatesRef = useMemoFirebase(
     () => (firestore ? collection(firestore, 'templates') : null),
@@ -45,20 +43,31 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const [activeLayer, setActiveLayer] = useState<Layer | null>(null);
 
   useEffect(() => {
+    // Set initial active template when templates load
     if (!activeTemplate && templates.length > 0) {
       const firstTemplate = templates[0];
       setActiveTemplateState(firstTemplate);
       if (firstTemplate.layers.length > 0) {
         setActiveLayer(firstTemplate.layers[0]);
       }
-    } else if (activeTemplate) {
+    }
+  }, [templates, activeTemplate]);
+
+  useEffect(() => {
+    // When active template changes, update its state if it gets updated in the collection
+    if (activeTemplate) {
         const updatedTemplate = templates.find(t => t.id === activeTemplate.id);
         if (updatedTemplate) {
-            setActiveTemplateState(updatedTemplate);
+            // Check if the template data is actually different to avoid infinite loops
+            if (JSON.stringify(updatedTemplate) !== JSON.stringify(activeTemplate)) {
+                setActiveTemplateState(updatedTemplate);
+            }
 
             if (activeLayer) {
                 const updatedLayer = updatedTemplate.layers.find(l => l.id === activeLayer.id);
-                setActiveLayer(updatedLayer || null);
+                setActiveLayer(updatedLayer || (updatedTemplate.layers[0] || null));
+            } else if (updatedTemplate.layers.length > 0) {
+                setActiveLayer(updatedTemplate.layers[0]);
             }
         }
     }
@@ -72,12 +81,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setActiveLayer(null);
     }
-  };
-
-  const addTemplate = (template: Template) => {
-    if (!templatesRef) return;
-    // This will be replaced by a proper Firestore call
-    console.log('Adding template (placeholder):', template);
   };
 
   const updateLayerProperty = (
@@ -113,12 +116,11 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       templates,
       activeTemplate,
       setActiveTemplate,
-      addTemplate,
       activeLayer,
       setActiveLayer,
       updateLayerProperty,
     }),
-    [templates, activeTemplate, activeLayer]
+    [templates, activeTemplate, activeLayer, setActiveTemplate, updateLayerProperty]
   );
 
   if (templatesLoading) {

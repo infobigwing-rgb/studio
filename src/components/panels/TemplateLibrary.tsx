@@ -6,9 +6,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { Template } from "@/lib/types";
 import TemplateUploader from "../TemplateUploader";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { Search } from "lucide-react";
 
 export default function TemplateLibrary() {
   const { templates, activeTemplate, setActiveTemplate } = useProject();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredTemplates = templates.filter((template) =>
+    template.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <aside className="flex w-72 shrink-0 flex-col bg-secondary/50">
@@ -18,9 +26,21 @@ export default function TemplateLibrary() {
         </h2>
         <TemplateUploader />
       </div>
+      <div className="p-2">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search templates..."
+            className="w-full rounded-lg bg-background pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
       <ScrollArea className="flex-1">
-        <div className="grid grid-cols-1 gap-4 p-4">
-          {templates.map((template: Template) => (
+        <div className="grid grid-cols-1 gap-4 p-4 pt-0">
+          {filteredTemplates.map((template: Template) => (
             <button
               key={template.id}
               onClick={() => setActiveTemplate(template)}
