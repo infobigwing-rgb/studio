@@ -81,18 +81,21 @@ service cloud.firestore {
 
     /**
      * @description Restricts access to render jobs. A user can access renders where their UID matches the userId field.
+     * This rule enables the client to query the 'renders' collection with `where('userId', '==', request.auth.uid)`.
      * @path /renders/{renderId}
      */
     match /renders/{renderId} {
-       // Users can read (get, list) a render if they are the owner.
-       // This rule enables the client to query the 'renders' collection with `where('userId', '==', request.auth.uid)`.
-      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Allow user to get a specific render job they own.
+      allow get: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Allow user to list render jobs they own, which is what the client query does.
+      allow list: if request.auth != null && request.query.resource.data.userId == request.auth.uid;
 
-      // Users can create a render if the new document's userId matches their own.
+      // Allow user to create a render if the new document's userId matches their own.
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       
-      // Users can update their own render jobs.
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Allow user to update their own render jobs.
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
 
       // Deleting renders is not permitted by this ruleset.
       allow delete: if false;
