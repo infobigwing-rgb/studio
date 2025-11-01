@@ -12,6 +12,7 @@ import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import AIChatbot from '@/components/ai/AIChatbot';
 
 export default function EditorPage() {
   const { user, isUserLoading } = useUser();
@@ -44,6 +45,7 @@ export default function EditorPage() {
             </div>
             <PropertyInspector />
           </main>
+          <AIChatbot />
         </div>
       </DndProvider>
     </ProjectProvider>

@@ -8,9 +8,10 @@ import {
 import {
   processTemplateFile,
 } from "@/ai/flows/process-template-flow";
-import type { ProcessTemplateFileInput, ProcessTemplateFileOutput, SearchEnvatoTemplatesInput, SearchEnvatoTemplatesOutput, Template } from "@/lib/types";
+import type { ProcessTemplateFileInput, ProcessTemplateFileOutput, SearchEnvatoTemplatesInput, SearchEnvatoTemplatesOutput, Template, EditWithAIInput, EditWithAIOutput } from "@/lib/types";
 import { searchEnvatoTemplates } from "@/ai/flows/envato-integration-flow";
 import { shotstackRender, getShotstackRenderStatus } from "@/ai/flows/shotstack-render-flow";
+import { editTemplateWithAI } from "@/ai/flows/ai-editor-flow";
 
 export async function getAssetRecommendations(
   input: AIAssetRecommendationsInput
@@ -34,4 +35,8 @@ export async function renderWithShotstack(template: Template) {
 
 export async function getRenderStatus(renderId: string) {
     return await getShotstackRenderStatus(renderId);
+}
+
+export async function editWithAI(input: EditWithAIInput): Promise<EditWithAIOutput> {
+  return await editTemplateWithAI(input);
 }

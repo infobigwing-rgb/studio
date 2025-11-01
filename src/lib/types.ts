@@ -12,39 +12,37 @@ export type Property = {
   };
 };
 
-export type Layer = {
-  id: string;
-  name: string;
-  type: 'text' | 'image' | 'shape';
-  properties: Record<string, Property>;
-};
-
-export type Template = {
-  id:string;
-  name: string;
-  thumbnailUrl: string;
-  thumbnailHint: string;
-  layers: Layer[];
-};
-
-
-const PropertySchema = z.object({
+const PropertySchemaLoose = z.object({
   value: z.any(),
-  type: z.enum(['text', 'number', 'color', 'slider']),
+  type: z.enum(['text', 'number', 'color', 'slider', 'file', 'select', 'toggle-group']),
   label: z.string(),
   options: z.object({
     min: z.number().optional(),
     max: z.number().optional(),
     step: z.number().optional(),
+    items: z.array(z.object({ value: z.string(), label: z.string() })).optional(),
   }).optional(),
 });
 
-const LayerSchema = z.object({
+
+export const LayerSchema = z.object({
   id: z.string().describe("A unique ID for the layer, e.g., 'layer_new_1'"),
   name: z.string().describe("A descriptive name for the layer, e.g., 'Main Title'"),
   type: z.enum(['text', 'image', 'shape']),
-  properties: z.record(PropertySchema),
+  properties: z.record(PropertySchemaLoose).describe("An object where keys are property names (e.g., 'content', 'fontSize') and values are the property definitions."),
 });
+export type Layer = z.infer<typeof LayerSchema>;
+
+
+export const TemplateSchema = z.object({
+  id:z.string(),
+  name: z.string(),
+  thumbnailUrl: z.string().url(),
+  thumbnailHint: z.string(),
+  layers: z.array(LayerSchema),
+});
+export type Template = z.infer<typeof TemplateSchema>;
+
 
 export const ProcessTemplateFileInputSchema = z.object({
   fileName: z.string().describe('The name of the file to process.'),
@@ -82,3 +80,16 @@ export const SearchEnvatoTemplatesOutputSchema = z.object({
   })).describe('A list of templates from Envato.'),
 });
 export type SearchEnvatoTemplatesOutput = z.infer<typeof SearchEnvatoTemplatesOutputSchema>;
+
+
+export const EditWithAIInputSchema = z.object({
+  command: z.string().describe("The user's natural language command for the edit."),
+  template: TemplateSchema.describe("The current state of the template to be edited."),
+  jsonStringifiedTemplate: z.string().optional().describe("A JSON string representation of the template. This is used internally for the prompt and should not be provided by the client.")
+});
+export type EditWithAIInput = z.infer<typeof EditWithAIInputSchema>;
+
+export const EditWithAIOutputSchema = z.object({
+  updatedTemplate: TemplateSchema.describe("The full template object, modified by the AI according to the user's command."),
+});
+export type EditWithAIOutput = z.infer<typeof EditWithAIOutputSchema>;
