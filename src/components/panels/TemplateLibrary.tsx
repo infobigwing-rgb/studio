@@ -12,7 +12,6 @@ import { Search, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { searchEnvato } from '@/app/actions';
 
-
 export default function TemplateLibrary() {
   const { templates, activeTemplate, setActiveTemplate } = useProject();
   const [localSearchTerm, setLocalSearchTerm] = useState('');
