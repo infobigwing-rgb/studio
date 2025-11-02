@@ -17,6 +17,8 @@ import {
 import { collection, doc } from 'firebase/firestore';
 import type { Template, Layer } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 interface ProjectContextType {
   templates: Template[];
@@ -142,7 +144,9 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <ProjectContext.Provider value={contextValue}>
-      {children}
+      <DndProvider backend={HTML5Backend}>
+        {children}
+      </DndProvider>
     </ProjectContext.Provider>
   );
 };

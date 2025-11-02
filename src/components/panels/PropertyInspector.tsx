@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Layers, AlignCenter, AlignLeft, AlignRight, TextIcon, Scaling, Clock, Image as ImageIcon } from "lucide-react";
+import { Layers, AlignCenter, AlignLeft, AlignRight, TextIcon, Scaling, Clock, Image as ImageIcon, FileUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Textarea } from "../ui/textarea";
@@ -124,8 +124,8 @@ export default function PropertyInspector() {
             </AccordionTrigger>
              <AccordionContent className="bg-background/30 p-4 space-y-4">
                 <div className="flex gap-4">
-                    {props.x && <div className="flex-1 space-y-2"><Label>Position X</Label><Input type="number" value={props.x.value} onChange={e => handlePropertyChange(layer.id, 'x', parseFloat(e.target.value))} /></div>}
-                    {props.y && <div className="flex-1 space-y-2"><Label>Position Y</Label><Input type="number" value={props.y.value} onChange={e => handlePropertyChange(layer.id, 'y', parseFloat(e.target.value))} /></div>}
+                    {props.x && <div className="flex-1 space-y-2"><Label>Position X (%)</Label><Input type="number" value={props.x.value} onChange={e => handlePropertyChange(layer.id, 'x', parseFloat(e.target.value))} /></div>}
+                    {props.y && <div className="flex-1 space-y-2"><Label>Position Y (%)</Label><Input type="number" value={props.y.value} onChange={e => handlePropertyChange(layer.id, 'y', parseFloat(e.target.value))} /></div>}
                 </div>
                  {props.opacity && <div className="space-y-2"><Label>Opacity</Label><div className="flex items-center gap-2"><Slider min={0} max={100} step={1} value={[props.opacity.value]} onValueChange={([v]) => handlePropertyChange(layer.id, 'opacity', v)} /><span className="text-xs text-muted-foreground w-12 text-right">{props.opacity.value}%</span></div></div>}
                  {props.zIndex && <div className="space-y-2"><Label>Layer Order (Z-Index)</Label><Input type="number" value={props.zIndex.value} onChange={e => handlePropertyChange(layer.id, 'zIndex', parseFloat(e.target.value))} /></div>}

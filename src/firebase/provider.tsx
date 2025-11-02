@@ -2,9 +2,9 @@
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore } from 'firebase/firestore';
+import { Firestore, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -53,6 +53,39 @@ export interface UserHookResult { // Renamed from UserAuthHookResult for consist
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
 /**
+ * Creates a user profile document in Firestore if it doesn't already exist.
+ * This function is intended to be called right after a user signs in for the first time.
+ */
+const createUserProfileDocument = async (user: User, firestore: Firestore) => {
+    if (!user) return;
+    const userRef = doc(firestore, `users/${user.uid}`);
+    const snapshot = await getDoc(userRef);
+  
+    if (!snapshot.exists()) {
+      const { email, displayName, photoURL } = user;
+      const createdAt = serverTimestamp();
+  
+      try {
+        await setDoc(userRef, {
+          displayName: displayName || 'Anonymous User',
+          email,
+          photoURL,
+          createdAt,
+          lastLogin: createdAt, // Set lastLogin to createdAt on creation
+        });
+      } catch (error) {
+        console.error("Error creating user document:", error);
+      }
+    } else {
+        try {
+            await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
+        } catch (error) {
+            console.error("Error updating last login:", error);
+        }
+    }
+  };
+
+/**
  * FirebaseProvider manages and provides Firebase services and user authentication state.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
@@ -80,6 +113,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       auth,
       (firebaseUser) => { // Auth state determined
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+        if (firebaseUser) {
+            createUserProfileDocument(firebaseUser, firestore);
+        }
       },
       (error) => { // Auth listener error
         console.error("FirebaseProvider: onAuthStateChanged error:", error);
@@ -87,7 +123,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       }
     );
     return () => unsubscribe(); // Cleanup
-  }, [auth]); // Depends on the auth instance
+  }, [auth, firestore]);
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {

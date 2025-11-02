@@ -32,6 +32,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Film, Loader2 } from 'lucide-react';
+import { AuthError, onIdTokenChanged } from 'firebase/auth';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -53,6 +54,14 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router]);
 
+  useEffect(() => {
+    const unsubscribe = onIdTokenChanged(auth, null, (error: any) => {
+        handleAuthError(error);
+    });
+
+    return () => unsubscribe();
+  }, [auth]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -61,47 +70,39 @@ export default function LoginPage() {
     },
   });
 
-  async function handleEmailLogin(values: z.infer<typeof formSchema>) {
+  function handleEmailLogin(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    try {
-      initiateEmailSignIn(auth, values.email, values.password);
-    } catch (error: any) {
-      handleAuthError(error);
-    } 
+    initiateEmailSignIn(auth, values.email, values.password);
   }
 
-  async function handleEmailSignUp(values: z.infer<typeof formSchema>) {
+  function handleEmailSignUp(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    try {
-      initiateEmailSignUp(auth, values.email, values.password);
-    } catch (error: any) {
-      handleAuthError(error);
-    }
+    initiateEmailSignUp(auth, values.email, values.password);
   }
 
-  async function handleAnonymousLogin() {
+  function handleAnonymousLogin() {
     setIsLoading(true);
-    try {
-      initiateAnonymousSignIn(auth);
-    } catch (error: any) {
-      handleAuthError(error);
-    }
+    initiateAnonymousSignIn(auth);
   }
 
-  function handleAuthError(error: any) {
+  function handleAuthError(error: AuthError) {
     setIsLoading(false);
     let description = "An unexpected error occurred. Please try again.";
     if (error.code) {
         switch (error.code) {
             case 'auth/user-not-found':
-                description = "No account found with this email. Please sign up.";
+            case 'auth/invalid-credential':
+                description = "No account found with this email or password. Please check your credentials or sign up.";
                 break;
             case 'auth/wrong-password':
                 description = "Incorrect password. Please try again.";
                 break;
             case 'auth/email-already-in-use':
-                description = "An account already exists with this email address.";
+                description = "An account already exists with this email address. Please sign in.";
                 break;
+            case 'auth/weak-password':
+                 description = "The password is too weak. Please use at least 6 characters.";
+                 break;
             default:
                 description = error.message;
         }
@@ -172,7 +173,7 @@ export default function LoginPage() {
               />
                <div className="flex flex-col gap-2 md:flex-row">
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading && <Loader2 className="animate-spin" />}
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sign In
                 </Button>
                 <Button
@@ -182,7 +183,7 @@ export default function LoginPage() {
                   className="w-full"
                   disabled={isLoading}
                 >
-                  {isLoading && <Loader2 className="animate-spin" />}
+                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sign Up
                 </Button>
               </div>
@@ -206,7 +207,7 @@ export default function LoginPage() {
             onClick={handleAnonymousLogin}
             disabled={isLoading}
           >
-            {isLoading && <Loader2 className="animate-spin" />}
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Sign in Anonymously
           </Button>
         </CardFooter>

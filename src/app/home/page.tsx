@@ -1,7 +1,5 @@
 'use client';
 
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ProjectProvider } from '@/contexts/ProjectContext';
 import Header from '@/components/layout/Header';
 import TemplateLibrary from '@/components/panels/TemplateLibrary';
@@ -34,7 +32,6 @@ export default function EditorPage() {
 
   return (
     <ProjectProvider>
-      <DndProvider backend={HTML5Backend}>
         <div className="flex h-dvh w-full flex-col bg-background text-foreground">
           <Header />
           <main className="flex flex-1 overflow-hidden">
@@ -47,7 +44,6 @@ export default function EditorPage() {
           </main>
           <AIChatbot />
         </div>
-      </DndProvider>
     </ProjectProvider>
   );
 }

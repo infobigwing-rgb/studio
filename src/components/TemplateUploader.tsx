@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, FileUp } from 'lucide-react';
+import { Loader2, FileUp } from 'lucide-react';
 import type { ProcessTemplateFileOutput } from '@/lib/types';
 import { useFirestore, addDocumentNonBlocking } from '@/firebase';
 import { collection } from 'firebase/firestore';
@@ -75,7 +75,7 @@ export default function TemplateUploader() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm">
-          <Upload className="mr-2 h-4 w-4" />
+          <FileUp className="mr-2 h-4 w-4" />
           Import
         </Button>
       </DialogTrigger>
