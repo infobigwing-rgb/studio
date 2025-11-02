@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Layers, AlignCenter, AlignLeft, AlignRight, TextIcon, Scaling, Clock } from "lucide-react";
+import { Layers, AlignCenter, AlignLeft, AlignRight, TextIcon, Scaling, Clock, Image as ImageIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Textarea } from "../ui/textarea";
@@ -18,7 +18,7 @@ const formatTime = (seconds: number = 0) => {
   };
 
   const parseTime = (timeString: string) => {
-    if (!timeString.includes(':')) return parseFloat(timeString) || 0;
+    if (!timeString || !timeString.includes(':')) return parseFloat(timeString) || 0;
     const parts = timeString.split(':').map(Number);
     const mins = parts[0] || 0;
     const secs = parts[1] || 0;
@@ -32,6 +32,17 @@ export default function PropertyInspector() {
   const handlePropertyChange = (layerId: string, propKey: string, value: any) => {
     updateLayerProperty(layerId, propKey, value);
   };
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, layerId: string) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const objectUrl = URL.createObjectURL(file);
+      // In a real app, you would upload this file to cloud storage and get a permanent URL
+      // For now, we'll just use the local object URL for preview.
+      handlePropertyChange(layerId, 'source', objectUrl);
+    }
+  };
+
 
   if (!activeLayer) {
     return (
@@ -62,10 +73,10 @@ export default function PropertyInspector() {
         <span className="text-xs uppercase text-muted-foreground bg-secondary px-2 py-1 rounded-md">{layer.type}</span>
       </div>
       <ScrollArea className="flex-1">
-        <Accordion type="multiple" defaultValue={['text-properties', 'transform-properties', 'timing-properties']} className="w-full">
+        <Accordion type="multiple" defaultValue={['text-properties', 'image-properties', 'transform-properties', 'timing-properties']} className="w-full">
          
          {/* Text Properties */}
-          {layer.type === 'text' && (
+          {layer.type === 'text' && props.content && (
             <AccordionItem value="text-properties">
                 <AccordionTrigger className="px-4 py-2 text-sm font-medium hover:no-underline">
                     <div className="flex items-center gap-2">
@@ -84,6 +95,26 @@ export default function PropertyInspector() {
             </AccordionItem>
           )}
 
+          {/* Image Properties */}
+          {layer.type === 'image' && props.source && (
+            <AccordionItem value="image-properties">
+              <AccordionTrigger className="px-4 py-2 text-sm font-medium hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" /> Image
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="bg-background/30 p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label>Source</Label>
+                  <Input type="file" accept="image/*" onChange={(e) => handleFileChange(e, layer.id)} className="text-xs"/>
+                  <div className="mt-2 rounded border p-2">
+                      <img src={props.source.value} alt="Preview" className="w-full h-auto rounded-sm" />
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+
           {/* Transform Properties */}
           <AccordionItem value="transform-properties">
              <AccordionTrigger className="px-4 py-2 text-sm font-medium hover:no-underline">
@@ -97,6 +128,7 @@ export default function PropertyInspector() {
                     {props.y && <div className="flex-1 space-y-2"><Label>Position Y</Label><Input type="number" value={props.y.value} onChange={e => handlePropertyChange(layer.id, 'y', parseFloat(e.target.value))} /></div>}
                 </div>
                  {props.opacity && <div className="space-y-2"><Label>Opacity</Label><div className="flex items-center gap-2"><Slider min={0} max={100} step={1} value={[props.opacity.value]} onValueChange={([v]) => handlePropertyChange(layer.id, 'opacity', v)} /><span className="text-xs text-muted-foreground w-12 text-right">{props.opacity.value}%</span></div></div>}
+                 {props.zIndex && <div className="space-y-2"><Label>Layer Order (Z-Index)</Label><Input type="number" value={props.zIndex.value} onChange={e => handlePropertyChange(layer.id, 'zIndex', parseFloat(e.target.value))} /></div>}
              </AccordionContent>
           </AccordionItem>
 
@@ -109,10 +141,10 @@ export default function PropertyInspector() {
             </AccordionTrigger>
              <AccordionContent className="bg-background/30 p-4 space-y-4">
                  <div className="flex gap-4">
-                     {props.start && <div className="flex-1 space-y-2"><Label>Start</Label><Input value={formatTime(props.start.value)} onBlur={e => handlePropertyChange(layer.id, 'start', parseTime(e.target.value))} /></div>}
-                     {props.duration && <div className="flex-1 space-y-2"><Label>Duration</Label><Input value={formatTime(props.duration.value)} onBlur={e => handlePropertyChange(layer.id, 'duration', parseTime(e.target.value))} /></div>}
+                     {props.start && <div className="flex-1 space-y-2"><Label>Start</Label><Input defaultValue={formatTime(props.start.value)} onBlur={e => handlePropertyChange(layer.id, 'start', parseTime(e.target.value))} /></div>}
+                     {props.duration && <div className="flex-1 space-y-2"><Label>Duration</Label><Input defaultValue={formatTime(props.duration.value)} onBlur={e => handlePropertyChange(layer.id, 'duration', parseTime(e.target.value))} /></div>}
                  </div>
-                 {props.start && props.duration && <div className="space-y-2"><Label>End</Label><Input value={formatTime(props.start.value + props.duration.value)} disabled /></div>}
+                 {props.start && props.duration && <div className="space-y-2"><Label>End</Label><Input value={formatTime(props.start.value + props.duration.value)} readOnly disabled /></div>}
             </AccordionContent>
           </AccordionItem>
           

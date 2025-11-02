@@ -38,13 +38,7 @@ export const ProcessTemplateFileInputSchema = z.object({
 });
 export type ProcessTemplateFileInput = z.infer<typeof ProcessTemplateFileInputSchema>;
 
-export const ProcessTemplateFileOutputSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  thumbnailUrl: z.string().url(),
-  thumbnailHint: z.string(),
-  layers: z.array(LayerSchema),
-});
+export const ProcessTemplateFileOutputSchema = TemplateSchema;
 export type ProcessTemplateFileOutput = z.infer<typeof ProcessTemplateFileOutputSchema>;
 
 // Define the input schema for searching templates
