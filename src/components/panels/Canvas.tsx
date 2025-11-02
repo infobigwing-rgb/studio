@@ -7,12 +7,17 @@ import { cn } from "@/lib/utils";
 export default function Canvas() {
   const { activeTemplate, activeLayer } = useProject();
 
-  const layersToRender = activeTemplate?.layers || [];
+  // Sort layers by zIndex for proper stacking
+  const layersToRender = activeTemplate?.layers.slice().sort((a, b) => {
+    const zIndexA = a.properties.zIndex?.value ?? 0;
+    const zIndexB = b.properties.zIndex?.value ?? 0;
+    return zIndexA - zIndexB;
+  }) || [];
 
   return (
     <div className="relative flex flex-1 items-center justify-center bg-muted/20 p-8">
       <div className="relative aspect-video w-full max-w-4xl overflow-hidden rounded-lg bg-black shadow-2xl">
-        {layersToRender.map((layer, index) => {
+        {layersToRender.map((layer) => {
           const isSelected = activeLayer?.id === layer.id;
           
           if (layer.type === 'image') {
@@ -27,7 +32,7 @@ export default function Canvas() {
                   width: '100%',
                   height: '100%',
                   opacity: (layer.properties.opacity?.value ?? 100) / 100,
-                  zIndex: index, // Use array index for z-index
+                  zIndex: layer.properties.zIndex?.value,
                 }}
               >
                 <Image
@@ -52,7 +57,7 @@ export default function Canvas() {
                   fontFamily: layer.properties.fontFamily?.value || 'Inter',
                   fontSize: `${layer.properties.fontSize.value}px`,
                   color: layer.properties.color.value,
-                  textAlign: layer.properties.textAlign?.value || 'center',
+                  textAlign: layer.properties.textAlign?.value as CanvasTextAlign || 'center',
                   opacity: (layer.properties.opacity?.value ?? 100) / 100,
                   lineHeight: 1.2,
                   fontWeight: 'bold',
@@ -62,7 +67,7 @@ export default function Canvas() {
                   left: `${layer.properties.x.value}%`,
                   transform: 'translate(-50%, -50%)',
                   width: '90%',
-                  zIndex: index, // Use array index for z-index
+                  zIndex: layer.properties.zIndex?.value,
                 }}
               >
                 {layer.properties.content.value}

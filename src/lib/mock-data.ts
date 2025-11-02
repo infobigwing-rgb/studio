@@ -24,6 +24,9 @@ export const TEMPLATES: Template[] = [
           opacity: { value: 100, type: 'slider', label: 'Opacity', options: { min: 0, max: 100 } },
           x: { value: 50, type: 'slider', label: 'Position X (%)', options: { min: 0, max: 100 } },
           y: { value: 40, type: 'slider', label: 'Position Y (%)', options: { min: 0, max: 100 } },
+          zIndex: { value: 10, type: 'number', label: 'Z-Index' },
+          start: { value: 0, type: 'number', label: 'Start Time' },
+          duration: { value: 5, type: 'number', label: 'Duration' },
         },
       },
       {
@@ -39,6 +42,9 @@ export const TEMPLATES: Template[] = [
           opacity: { value: 90, type: 'slider', label: 'Opacity', options: { min: 0, max: 100 } },
           x: { value: 50, type: 'slider', label: 'Position X (%)', options: { min: 0, max: 100 } },
           y: { value: 60, type: 'slider', label: 'Position Y (%)', options: { min: 0, max: 100 } },
+          zIndex: { value: 11, type: 'number', label: 'Z-Index' },
+          start: { value: 1, type: 'number', label: 'Start Time' },
+          duration: { value: 4, type: 'number', label: 'Duration' },
         },
       },
       {
@@ -48,6 +54,9 @@ export const TEMPLATES: Template[] = [
         properties: {
           source: { value: findImage('canvas_image_1')?.imageUrl || '', type: 'file', label: 'Source' },
           opacity: { value: 80, type: 'slider', label: 'Opacity', options: { min: 0, max: 100 } },
+          zIndex: { value: 1, type: 'number', label: 'Z-Index' },
+          start: { value: 0, type: 'number', label: 'Start Time' },
+          duration: { value: 5, type: 'number', label: 'Duration' },
         },
       },
     ],
@@ -71,6 +80,9 @@ export const TEMPLATES: Template[] = [
           opacity: { value: 100, type: 'slider', label: 'Opacity', options: { min: 0, max: 100 } },
           x: { value: 50, type: 'slider', label: 'Position X (%)', options: { min: 0, max: 100 } },
           y: { value: 50, type: 'slider', label: 'Position Y (%)', options: { min: 0, max: 100 } },
+          zIndex: { value: 10, type: 'number', label: 'Z-Index' },
+          start: { value: 0, type: 'number', label: 'Start Time' },
+          duration: { value: 5, type: 'number', label: 'Duration' },
         },
       },
       {
@@ -80,6 +92,9 @@ export const TEMPLATES: Template[] = [
         properties: {
           source: { value: findImage('template2')?.imageUrl || '', type: 'file', label: 'Source' },
           opacity: { value: 100, type: 'slider', label: 'Opacity', options: { min: 0, max: 100 } },
+          zIndex: { value: 1, type: 'number', label: 'Z-Index' },
+          start: { value: 0, type: 'number', label: 'Start Time' },
+          duration: { value: 5, type: 'number', label: 'Duration' },
         },
       }
     ],

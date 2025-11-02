@@ -6,36 +6,35 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Layers, Upload, AlignCenter, AlignLeft, AlignRight } from "lucide-react";
+import { Layers, Upload, AlignCenter, AlignLeft, AlignRight, TextIcon, Transform, Clock } from "lucide-react";
 import { Button } from "../ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Textarea } from "../ui/textarea";
+
+const formatTime = (seconds: number = 0) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const parseTime = (timeString: string) => {
+    if (!timeString.includes(':')) return parseFloat(timeString) || 0;
+    const parts = timeString.split(':').map(Number);
+    const mins = parts[0] || 0;
+    const secs = parts[1] || 0;
+    return mins * 60 + secs;
+  };
 
 
 export default function PropertyInspector() {
-  const { activeTemplate, activeLayer, updateLayerProperty } = useProject();
+  const { activeLayer, updateLayerProperty } = useProject();
 
   const handlePropertyChange = (layerId: string, propKey: string, value: any) => {
     updateLayerProperty(layerId, propKey, value);
   };
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, layerId: string, propKey: string) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (loadEvent) => {
-        if (loadEvent.target?.result) {
-            // For now, we just use the data URL. Later this would upload to storage.
-            handlePropertyChange(layerId, propKey, loadEvent.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-  
-  const selectedLayer = activeLayer;
 
-  if (!activeTemplate) {
+  if (!activeLayer) {
     return (
       <aside className="flex w-80 shrink-0 flex-col border-l bg-secondary/50">
         <div className="flex h-12 shrink-0 items-center border-b px-4">
@@ -43,168 +42,81 @@ export default function PropertyInspector() {
             Properties
           </h2>
         </div>
-        <div className="flex flex-1 items-center justify-center p-4 text-center">
-            <p className="text-sm text-muted-foreground">Select a template to see its layers and properties.</p>
-        </div>
-      </aside>
-    );
-  }
-  
-  if (!selectedLayer) {
-    return (
-       <aside className="flex w-80 shrink-0 flex-col border-l bg-secondary/50">
-        <div className="flex h-12 shrink-0 items-center border-b px-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Properties
-          </h2>
-        </div>
-        <div className="flex flex-1 items-center justify-center p-4 text-center">
-            <p className="text-sm text-muted-foreground">Select a layer to see its properties.</p>
+        <div className="flex flex-1 flex-col items-center justify-center p-4 text-center">
+            <Layers className="h-10 w-10 text-muted-foreground/50 mb-4" />
+            <h4 className="font-semibold text-lg mb-1">No Layer Selected</h4>
+            <p className="text-sm text-muted-foreground">Select a layer in the timeline to edit its properties.</p>
         </div>
       </aside>
     )
   }
 
+  const layer = activeLayer;
+  const props = layer.properties;
+
   return (
     <aside className="flex w-80 shrink-0 flex-col border-l bg-secondary/50">
-      <div className="flex h-12 shrink-0 items-center border-b px-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Properties
+      <div className="flex h-12 shrink-0 items-center justify-between border-b px-4">
+        <h2 className="text-lg font-semibold capitalize tracking-tight">
+          {layer.name}
         </h2>
+        <span className="text-xs uppercase text-muted-foreground bg-secondary px-2 py-1 rounded-md">{layer.type}</span>
       </div>
       <ScrollArea className="flex-1">
-        <Accordion type="single" collapsible className="w-full" defaultValue="layer-properties">
-          <AccordionItem value="layer-properties">
-            <AccordionTrigger 
-              className="border-b px-4 py-3 text-sm font-medium hover:no-underline"
-            >
-              <div className="flex items-center gap-2">
-                  <Layers className="h-4 w-4" />
-                  {selectedLayer.name}
-              </div>
+        <Accordion type="multiple" defaultValue={['text-properties', 'transform-properties', 'timing-properties']} className="w-full">
+         
+         {/* Text Properties */}
+          {layer.type === 'text' && (
+            <AccordionItem value="text-properties">
+                <AccordionTrigger className="px-4 py-2 text-sm font-medium hover:no-underline">
+                    <div className="flex items-center gap-2">
+                        <TextIcon className="h-4 w-4" /> Text
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="bg-background/30 p-4 space-y-4">
+                    {props.content && <div className="space-y-2"><Label>Content</Label><Textarea value={props.content.value} onChange={(e) => handlePropertyChange(layer.id, 'content', e.target.value)} rows={3} /></div>}
+                    {props.fontFamily && <div className="space-y-2"><Label>Font</Label><Select value={props.fontFamily.value} onValueChange={v => handlePropertyChange(layer.id, 'fontFamily', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{props.fontFamily.options?.items?.map(i => <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>)}</SelectContent></Select></div>}
+                    <div className="flex gap-4">
+                        {props.fontSize && <div className="flex-1 space-y-2"><Label>Size</Label><Input type="number" value={props.fontSize.value} onChange={e => handlePropertyChange(layer.id, 'fontSize', parseFloat(e.target.value))} /></div>}
+                        {props.color && <div className="flex-1 space-y-2"><Label>Color</Label><div className="relative"><Input value={props.color.value} onChange={e => handlePropertyChange(layer.id, 'color', e.target.value)} /><Input type="color" className="absolute right-1 top-1 h-8 w-8 p-0 appearance-none bg-transparent border-none cursor-pointer" value={props.color.value} onChange={e => handlePropertyChange(layer.id, 'color', e.target.value)} /></div></div>}
+                    </div>
+                    {props.textAlign && <div className="space-y-2"><Label>Align</Label><ToggleGroup type="single" value={props.textAlign.value} onValueChange={v => v && handlePropertyChange(layer.id, 'textAlign', v)} variant="outline" className="w-full"><ToggleGroupItem value="left" className="flex-1"><AlignLeft/></ToggleGroupItem><ToggleGroupItem value="center" className="flex-1"><AlignCenter/></ToggleGroupItem><ToggleGroupItem value="right" className="flex-1"><AlignRight/></ToggleGroupItem></ToggleGroup></div>}
+                </AccordionContent>
+            </AccordionItem>
+          )}
+
+          {/* Transform Properties */}
+          <AccordionItem value="transform-properties">
+             <AccordionTrigger className="px-4 py-2 text-sm font-medium hover:no-underline">
+                <div className="flex items-center gap-2">
+                    <Transform className="h-4 w-4" /> Transform
+                </div>
             </AccordionTrigger>
-            <AccordionContent className="bg-background/50 p-4">
-              <div className="space-y-6">
-                {Object.entries(selectedLayer.properties).map(([key, prop]) => (
-                  <div key={key} className="space-y-2">
-                    <Label htmlFor={`${selectedLayer.id}-${key}`}>{prop.label}</Label>
-                    {prop.type === 'text' && (
-                      <Input
-                        id={`${selectedLayer.id}-${key}`}
-                        type="text"
-                        value={prop.value}
-                        onChange={(e) => handlePropertyChange(selectedLayer.id, key, e.target.value)}
-                      />
-                    )}
-                    {prop.type === 'number' && (
-                      <Input
-                        id={`${selectedLayer.id}-${key}`}
-                        type="number"
-                        value={prop.value}
-                        onChange={(e) => handlePropertyChange(selectedLayer.id, key, parseFloat(e.target.value))}
-                      />
-                    )}
-                    {prop.type === 'color' && (
-                       <div className="relative">
-                          <Input
-                              id={`${selectedLayer.id}-${key}`}
-                              type="text"
-                              value={prop.value}
-                              onChange={(e) => handlePropertyChange(selectedLayer.id, key, e.target.value)}
-                              className="pr-10"
-                          />
-                          <Input
-                              type="color"
-                              value={prop.value}
-                              onChange={(e) => handlePropertyChange(selectedLayer.id, key, e.target.value)}
-                              className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 cursor-pointer appearance-none border-none bg-transparent p-0"
-                          />
-                      </div>
-                    )}
-                    {prop.type === 'slider' && (
-                       <div className="flex items-center gap-2">
-                          <Slider
-                              id={`${selectedLayer.id}-${key}`}
-                              min={prop.options?.min ?? 0}
-                              max={prop.options?.max ?? 100}
-                              step={prop.options?.step ?? 1}
-                              value={[prop.value]}
-                              onValueChange={([val]) => handlePropertyChange(selectedLayer.id, key, val)}
-                          />
-                           <Input
-                            type="number"
-                            className="h-8 w-16"
-                            value={prop.value}
-                            onChange={(e) => handlePropertyChange(selectedLayer.id, key, parseFloat(e.target.value))}
-                            min={prop.options?.min ?? 0}
-                            max={prop.options?.max ?? 100}
-                          />
-                      </div>
-                    )}
-                    {prop.type === 'file' && (
-                       <div className="flex items-center gap-2">
-                           <Input
-                              id={`${selectedLayer.id}-${key}-display`}
-                              type="text"
-                              readOnly
-                              value={prop.value.length > 30 ? '...' + prop.value.slice(-30) : prop.value}
-                              className="flex-1"
-                          />
-                           <Button asChild variant="outline" size="icon">
-                             <label htmlFor={`${selectedLayer.id}-${key}-file`}>
-                               <Upload className="h-4 w-4" />
-                               <span className="sr-only">Upload</span>
-                             </label>
-                           </Button>
-                           <Input
-                              id={`${selectedLayer.id}-${key}-file`}
-                              type="file"
-                              className="hidden"
-                              accept="image/*,video/*"
-                              onChange={(e) => handleFileChange(e, selectedLayer.id, key)}
-                           />
-                      </div>
-                    )}
-                    {prop.type === 'select' && (
-                      <Select
-                        value={prop.value}
-                        onValueChange={(value) => handlePropertyChange(selectedLayer.id, key, value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={`Select ${prop.label}`} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {prop.options?.items?.map(item => (
-                            <SelectItem key={item.value} value={item.value}>
-                              {item.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                    {prop.type === 'toggle-group' && (
-                      <ToggleGroup
-                        type="single"
-                        variant="outline"
-                        value={prop.value}
-                        onValueChange={(value) => {
-                          if (value) handlePropertyChange(selectedLayer.id, key, value)
-                        }}
-                      >
-                        {prop.options?.items?.map(item => (
-                           <ToggleGroupItem key={item.value} value={item.value} aria-label={item.label}>
-                             {item.value === 'left' && <AlignLeft className="h-4 w-4" />}
-                             {item.value === 'center' && <AlignCenter className="h-4 w-4" />}
-                             {item.value === 'right' && <AlignRight className="h-4 w-4" />}
-                           </ToggleGroupItem>
-                        ))}
-                      </ToggleGroup>
-                    )}
-                  </div>
-                ))}
-              </div>
+             <AccordionContent className="bg-background/30 p-4 space-y-4">
+                <div className="flex gap-4">
+                    {props.x && <div className="flex-1 space-y-2"><Label>Position X</Label><Input type="number" value={props.x.value} onChange={e => handlePropertyChange(layer.id, 'x', parseFloat(e.target.value))} /></div>}
+                    {props.y && <div className="flex-1 space-y-2"><Label>Position Y</Label><Input type="number" value={props.y.value} onChange={e => handlePropertyChange(layer.id, 'y', parseFloat(e.target.value))} /></div>}
+                </div>
+                 {props.opacity && <div className="space-y-2"><Label>Opacity</Label><div className="flex items-center gap-2"><Slider min={0} max={100} step={1} value={[props.opacity.value]} onValueChange={([v]) => handlePropertyChange(layer.id, 'opacity', v)} /><span className="text-xs text-muted-foreground w-12 text-right">{props.opacity.value}%</span></div></div>}
+             </AccordionContent>
+          </AccordionItem>
+
+          {/* Timing Properties */}
+          <AccordionItem value="timing-properties">
+             <AccordionTrigger className="px-4 py-2 text-sm font-medium hover:no-underline">
+                <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" /> Timing
+                </div>
+            </AccordionTrigger>
+             <AccordionContent className="bg-background/30 p-4 space-y-4">
+                 <div className="flex gap-4">
+                     {props.start && <div className="flex-1 space-y-2"><Label>Start</Label><Input value={formatTime(props.start.value)} onBlur={e => handlePropertyChange(layer.id, 'start', parseTime(e.target.value))} /></div>}
+                     {props.duration && <div className="flex-1 space-y-2"><Label>Duration</Label><Input value={formatTime(props.duration.value)} onBlur={e => handlePropertyChange(layer.id, 'duration', parseTime(e.target.value))} /></div>}
+                 </div>
+                 {props.start && props.duration && <div className="space-y-2"><Label>End</Label><Input value={formatTime(props.start.value + props.duration.value)} disabled /></div>}
             </AccordionContent>
           </AccordionItem>
+          
         </Accordion>
       </ScrollArea>
     </aside>
