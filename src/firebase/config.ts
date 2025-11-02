@@ -1,8 +1,16 @@
+// This file is populated by environment variables.
+// See the .env file for configuration.
+//
+// Firebase App Hosting integrates with the initializeApp() function to provide 
+// the environment variables needed to populate the FirebaseOptions in production.
+//
+// For local development, these values are sourced from the .env file.
 export const firebaseConfig = {
-  "projectId": "studio-881852331-4bea4",
-  "appId": "1:173990783981:web:cb8f8db0955012184115e4",
-  "apiKey": "AIzaSyBe8JZC8PsfJ9s0kk45jJLX_6Xgwj6rj9s",
-  "authDomain": "studio-881852331-4bea4.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "173990783981"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };

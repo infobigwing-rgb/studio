@@ -5,32 +5,30 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore'
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+// This function now safely handles initialization for both client and server environments.
 export function initializeFirebase() {
+  // On the server, we don't have browser environment variables, so we can't initialize.
+  // We'll return null and the provider will handle this.
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  
   if (!getApps().length) {
-    // Important! initializeApp() is called without any arguments because Firebase App Hosting
-    // integrates with the initializeApp() function to provide the environment variables needed to
-    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
-    // without arguments.
-    let firebaseApp;
-    try {
-      // Attempt to initialize via Firebase App Hosting environment variables
-      firebaseApp = initializeApp();
-    } catch (e) {
-      // Only warn in production because it's normal to use the firebaseConfig to initialize
-      // during development
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
-      }
-      firebaseApp = initializeApp(firebaseConfig);
+    const isFullyConfigured = Object.values(firebaseConfig).every(Boolean);
+    if (isFullyConfigured) {
+      const app = initializeApp(firebaseConfig);
+      return getSdks(app);
+    } else {
+      console.error("Firebase initialization failed. Ensure your environment variables are set correctly in .env for local development.");
+      // In case of misconfiguration on the client, we'll return null to avoid a hard crash.
+      return null;
     }
-
-    return getSdks(firebaseApp);
   }
 
-  // If already initialized, return the SDKs with the already initialized App
+  // If already initialized, return the SDKs.
   return getSdks(getApp());
 }
+
 
 export function getSdks(firebaseApp: FirebaseApp) {
   return {

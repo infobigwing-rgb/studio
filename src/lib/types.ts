@@ -44,6 +44,7 @@ export type ProcessTemplateFileOutput = z.infer<typeof ProcessTemplateFileOutput
 // Define the input schema for searching templates
 export const SearchEnvatoTemplatesInputSchema = z.object({
   query: z.string().optional().describe('The search query for templates.'),
+  token: z.string().optional().describe('The user-specific Envato API token.'),
   // Add other parameters like category, etc. as needed
 });
 export type SearchEnvatoTemplatesInput = z.infer<typeof SearchEnvatoTemplatesInputSchema>;

@@ -31,10 +31,11 @@ const searchEnvatoTemplatesFlow = ai.defineFlow(
     outputSchema: SearchEnvatoTemplatesOutputSchema,
   },
   async (input) => {
-    const envatoToken = process.env.ENVATO_TOKEN;
+    // Use the user-provided token from the input, or fall back to the environment variable.
+    const envatoToken = input.token || process.env.ENVATO_TOKEN;
 
     if (!envatoToken) {
-      throw new Error('Envato API token is not configured.');
+      throw new Error('Envato API token is not configured. Please add it to your profile or the .env file.');
     }
 
     const { query } = input;
@@ -53,7 +54,8 @@ const searchEnvatoTemplatesFlow = ai.defineFlow(
       if (!response.ok) {
         const errorBody = await response.text();
         console.error(`Envato API Error: ${response.status} ${response.statusText}`, errorBody);
-        throw new Error(`Envato API request failed with status ${response.status}`);
+        // Do not return the full error to the client for security reasons
+        throw new Error(`Envato API request failed.`);
       }
 
       const data = await response.json();

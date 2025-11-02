@@ -7,42 +7,78 @@ import { cn } from '@/lib/utils';
 import type { Template, SearchEnvatoTemplatesOutput } from '@/lib/types';
 import TemplateUploader from '../TemplateUploader';
 import { Input } from '@/components/ui/input';
-import { useState, useEffect } from 'react';
-import { Search, Loader2, Star, ShoppingCart } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Search, Loader2, Star, ShoppingCart, AlertTriangle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { searchEnvato } from '@/app/actions';
 import { Badge } from '../ui/badge';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 type EnvatoTemplate = SearchEnvatoTemplatesOutput['templates'][0];
 
 export default function TemplateLibrary() {
   const { templates, activeTemplate, setActiveTemplate } = useProject();
+  const firestore = useFirestore();
+  const { user } = useUser();
+  const { toast } = useToast();
+
+  const userRef = useMemoFirebase(
+    () => (firestore && user ? doc(firestore, 'users', user.uid) : null),
+    [firestore, user]
+  );
+  const { data: userProfile } = useDoc<{envatoToken?: string}>(userRef);
+
   const [localSearchTerm, setLocalSearchTerm] = useState('');
   const [envatoSearchTerm, setEnvatoSearchTerm] = useState('');
   const [envatoTemplates, setEnvatoTemplates] = useState<EnvatoTemplate[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [envatoError, setEnvatoError] = useState<string | null>(null);
 
   const filteredLocalTemplates = (templates || []).filter((template) =>
     template.name.toLowerCase().includes(localSearchTerm.toLowerCase())
   );
 
+  const handleEnvatoSearch = useCallback(async () => {
+    if (envatoSearchTerm.length < 3) {
+      setEnvatoTemplates([]);
+      setEnvatoError(null);
+      return;
+    }
+    if (!userProfile?.envatoToken) {
+      setEnvatoError('Envato API token not set. Please add it in your profile.');
+      setEnvatoTemplates([]);
+      return;
+    }
+
+    setIsSearching(true);
+    setEnvatoError(null);
+    try {
+      const results = await searchEnvato({ query: envatoSearchTerm, token: userProfile.envatoToken });
+      setEnvatoTemplates(results.templates);
+    } catch (error: any) {
+      setEnvatoError(error.message || 'An error occurred while searching Envato.');
+      setEnvatoTemplates([]);
+      toast({
+        variant: 'destructive',
+        title: 'Envato Search Failed',
+        description: error.message || 'Could not fetch templates from Envato.'
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  }, [envatoSearchTerm, userProfile?.envatoToken, toast]);
+
   useEffect(() => {
-    // Basic debounce
-    const handler = setTimeout(async () => {
-      if (envatoSearchTerm.length > 2) {
-        setIsSearching(true);
-        const results = await searchEnvato({ query: envatoSearchTerm });
-        setEnvatoTemplates(results.templates);
-        setIsSearching(false);
-      } else {
-        setEnvatoTemplates([]);
-      }
+    const handler = setTimeout(() => {
+      handleEnvatoSearch();
     }, 500);
 
     return () => {
       clearTimeout(handler);
     };
-  }, [envatoSearchTerm]);
+  }, [envatoSearchTerm, handleEnvatoSearch]);
   
   const handleApplyEnvatoTemplate = (envatoTemplate: EnvatoTemplate) => {
     // This is a placeholder. In a real scenario, we'd process this template.
@@ -65,6 +101,9 @@ export default function TemplateLibrary() {
               opacity: { value: 100, type: 'slider', label: 'Opacity', options: { min: 0, max: 100 } },
               x: { value: 50, type: 'slider', label: 'Position X (%)', options: { min: 0, max: 100 } },
               y: { value: 40, type: 'slider', label: 'Position Y (%)', options: { min: 0, max: 100 } },
+              zIndex: { value: 10, type: 'number', label: 'Z-Index' },
+              start: { value: 0, type: 'number', label: 'Start Time' },
+              duration: { value: 5, type: 'number', label: 'Duration' },
             }
          },
          {
@@ -78,8 +117,11 @@ export default function TemplateLibrary() {
               fontFamily: { value: 'Inter', type: 'select', label: 'Font Family', options: { items: [ {value: 'Inter', label: 'Inter'}, {value: 'Arial', label: 'Arial'}, {value: 'Helvetica', label: 'Helvetica'}, {value: 'Georgia', label: 'Georgia'} ]} },
               textAlign: { value: 'center', type: 'toggle-group', label: 'Text Align', options: { items: [{value: 'left', label: 'Left'}, {value: 'center', label: 'Center'}, {value: 'right', label: 'Right'}]} },
               opacity: { value: 100, type: 'slider', label: 'Opacity', options: { min: 0, max: 100 } },
-               x: { value: 50, type: 'slider', label: 'Position X (%)', options: { min: 0, max: 100 } },
-               y: { value: 60, type: 'slider', label: 'Position Y (%)', options: { min: 0, max: 100 } },
+              x: { value: 50, type: 'slider', label: 'Position X (%)', options: { min: 0, max: 100 } },
+              y: { value: 60, type: 'slider', label: 'Position Y (%)', options: { min: 0, max: 100 } },
+              zIndex: { value: 11, type: 'number', label: 'Z-Index' },
+              start: { value: 1, type: 'number', label: 'Start Time' },
+              duration: { value: 4, type: 'number', label: 'Duration' },
             },
          },
          {
@@ -89,6 +131,9 @@ export default function TemplateLibrary() {
             properties: {
               source: { value: 'https://picsum.photos/seed/bg/1280/720', type: 'file', label: 'Source'},
               opacity: { value: 100, type: 'slider', label: 'Opacity', options: {min: 0, max: 100} },
+              zIndex: { value: 1, type: 'number', label: 'Z-Index' },
+              start: { value: 0, type: 'number', label: 'Start Time' },
+              duration: { value: 5, type: 'number', label: 'Duration' },
             }
          }
       ],
@@ -182,7 +227,14 @@ export default function TemplateLibrary() {
                         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground"/>
                     </div>
                 )}
-                {!isSearching && envatoTemplates.length === 0 && (
+                {envatoError && (
+                  <div className="m-2 flex flex-col items-center gap-2 rounded-lg border border-dashed border-destructive/50 bg-destructive/10 p-4 text-center">
+                    <AlertTriangle className="h-6 w-6 text-destructive" />
+                    <p className="text-sm font-medium text-destructive">{envatoError}</p>
+                    <p className="text-xs text-muted-foreground">Go to your profile to add your token.</p>
+                  </div>
+                )}
+                {!isSearching && !envatoError && envatoTemplates.length === 0 && (
                     <div className="text-center p-8">
                         <p className="text-sm text-muted-foreground">
                             {envatoSearchTerm.length > 2 ? "No results found." : "Search for templates from Envato Elements."}

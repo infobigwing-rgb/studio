@@ -48,8 +48,9 @@ const convertToShotstackFormat = (template: Template): Edit => {
 
     sortedLayers.forEach((layer) => {
       let asset;
-      const start = 0; // Simplified for now
-      const length = 5; // Simplified for now
+      const start = layer.properties.start?.value ?? 0;
+      const length = layer.properties.duration?.value ?? 5;
+
 
       if (layer.type === 'text') {
         const properties = layer.properties;
@@ -62,7 +63,7 @@ const convertToShotstackFormat = (template: Template): Edit => {
             position: 'center', // More complex mapping needed
             offset: { // Example positioning, needs real logic
               x: (properties.x.value / 50) - 1,
-              y: (properties.y.value / 50) - 1,
+              y: ((properties.y.value / 50) - 1) * -1, // Y is inverted in Shotstack
             }
         };
       } else if (layer.type === 'image') {
@@ -91,6 +92,7 @@ const convertToShotstackFormat = (template: Template): Edit => {
       timeline: {
         background: "#000000",
         tracks,
+        // TODO: Calculate total duration from layers
       },
       output: {
         format: 'mp4',
@@ -109,7 +111,7 @@ const shotstackRenderFlow = ai.defineFlow(
     async (template) => {
         const apiKey = process.env.SHOTSTACK_API_KEY;
         if (!apiKey) {
-            throw new Error('SHOTSTACK_API_KEY is not configured.');
+            throw new Error('SHOTSTACK_API_KEY is not configured in your .env file.');
         }
 
         const shotstack = new Shotstack({ apiKey });
@@ -139,7 +141,7 @@ const shotstackStatusFlow = ai.defineFlow(
     async (renderId) => {
         const apiKey = process.env.SHOTSTACK_API_KEY;
         if (!apiKey) {
-            throw new Error('SHOTSTACK_API_KEY is not configured.');
+            throw new Error('SHOTSTACK_API_KEY is not configured in your .env file.');
         }
 
         const shotstack = new Shotstack({ apiKey });

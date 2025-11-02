@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,7 +32,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Film, Loader2 } from 'lucide-react';
-import { AuthError, onIdTokenChanged } from 'firebase/auth';
+import { AuthError, onAuthStateChanged, Unsubscribe } from 'firebase/auth';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -48,44 +48,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!isUserLoading && user) {
-      router.push('/home');
-    }
-  }, [user, isUserLoading, router]);
-
-  useEffect(() => {
-    const unsubscribe = onIdTokenChanged(auth, null, (error: any) => {
-        handleAuthError(error);
-    });
-
-    return () => unsubscribe();
-  }, [auth]);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
-
-  function handleEmailLogin(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    initiateEmailSignIn(auth, values.email, values.password);
-  }
-
-  function handleEmailSignUp(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    initiateEmailSignUp(auth, values.email, values.password);
-  }
-
-  function handleAnonymousLogin() {
-    setIsLoading(true);
-    initiateAnonymousSignIn(auth);
-  }
-
-  function handleAuthError(error: AuthError) {
+  const handleAuthError = useCallback((error: AuthError) => {
     setIsLoading(false);
     let description = "An unexpected error occurred. Please try again.";
     if (error.code) {
@@ -112,7 +75,55 @@ export default function LoginPage() {
       title: 'Authentication Error',
       description,
     });
-  }
+  }, [toast]);
+
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.push('/home');
+    }
+  }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    let unsubscribe: Unsubscribe | undefined;
+    if (auth) {
+        // This listener will catch auth errors from the non-blocking sign-in attempts
+        unsubscribe = onAuthStateChanged(auth, 
+            (user) => {
+                if (user) {
+                    setIsLoading(false);
+                }
+            }, 
+            (error) => {
+                handleAuthError(error as AuthError);
+            }
+        );
+    }
+    return () => unsubscribe?.();
+  }, [auth, handleAuthError]);
+
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = (values: z.infer<typeof formSchema>, action: 'signIn' | 'signUp') => {
+    setIsLoading(true);
+    if (action === 'signIn') {
+        initiateEmailSignIn(auth, values.email, values.password);
+    } else {
+        initiateEmailSignUp(auth, values.email, values.password);
+    }
+  };
+
+  const handleAnonymousLogin = () => {
+    setIsLoading(true);
+    initiateAnonymousSignIn(auth);
+  };
+
 
   if (isUserLoading || user) {
     return (
@@ -134,7 +145,7 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleEmailLogin)} className="space-y-4">
+            <form className="space-y-4">
               <FormField
                 control={form.control}
                 name="email"
@@ -172,14 +183,14 @@ export default function LoginPage() {
                 )}
               />
                <div className="flex flex-col gap-2 md:flex-row">
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="button" className="w-full" disabled={isLoading} onClick={form.handleSubmit((v) => onSubmit(v, 'signIn'))}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Sign In
                 </Button>
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={form.handleSubmit(handleEmailSignUp)}
+                  onClick={form.handleSubmit((v) => onSubmit(v, 'signUp'))}
                   className="w-full"
                   disabled={isLoading}
                 >
