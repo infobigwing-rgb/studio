@@ -6,8 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Layers, Upload, AlignCenter, AlignLeft, AlignRight, TextIcon, Transform, Clock } from "lucide-react";
-import { Button } from "../ui/button";
+import { Layers, AlignCenter, AlignLeft, AlignRight, TextIcon, Scaling, Clock } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Textarea } from "../ui/textarea";
@@ -89,7 +88,7 @@ export default function PropertyInspector() {
           <AccordionItem value="transform-properties">
              <AccordionTrigger className="px-4 py-2 text-sm font-medium hover:no-underline">
                 <div className="flex items-center gap-2">
-                    <Transform className="h-4 w-4" /> Transform
+                    <Scaling className="h-4 w-4" /> Transform
                 </div>
             </AccordionTrigger>
              <AccordionContent className="bg-background/30 p-4 space-y-4">
